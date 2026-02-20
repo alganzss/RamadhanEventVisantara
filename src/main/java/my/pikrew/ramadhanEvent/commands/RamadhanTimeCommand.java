@@ -82,25 +82,6 @@ public class RamadhanTimeCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage("§eAction Bar: §f" + plugin.getConfig().getBoolean("displays.action-bar.enabled"));
                 sender.sendMessage("§eBoss Bar: §f" + plugin.getConfig().getBoolean("displays.boss-bar.enabled"));
             }
-            case "spawnstatus" -> {
-                if (!sender.hasPermission("ramadhan.spawn")) {
-                    sender.sendMessage(messageUtil.getMessage("commands.no-permission"));
-                    return true;
-                }
-                sender.sendMessage("§6=== Ghost Spawn Status ===");
-                sender.sendMessage("§eNight Surge Active: §f" + spawnRateManager.isNightSurgeActive());
-                spawnRateManager.getSpawnDataMap().values().forEach(data ->
-                        sender.sendMessage("§e" + data.getMobKey() + " §7| Chance: §f" + data.getCurrentChance()
-                                + " §7| Level: §f" + data.getCurrentMinLevel() + "-" + data.getCurrentMaxLevel()));
-            }
-            case "spawnrefresh" -> {
-                if (!sender.hasPermission("ramadhan.spawn")) {
-                    sender.sendMessage(messageUtil.getMessage("commands.no-permission"));
-                    return true;
-                }
-                spawnRateManager.forceRefresh();
-                sender.sendMessage("§aGhost spawn rates refreshed.");
-            }
 
             default -> sender.sendMessage(messageUtil.getMessage("commands.help"));
         }

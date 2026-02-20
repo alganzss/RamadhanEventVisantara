@@ -2,6 +2,7 @@ package my.pikrew.ramadhanEvent;
 
 import my.pikrew.ramadhanEvent.commands.CrateCommand;
 import my.pikrew.ramadhanEvent.commands.RamadhanCommand;
+import my.pikrew.ramadhanEvent.commands.RamadhanTimeCommand;
 import my.pikrew.ramadhanEvent.commands.RegionWandCommand;
 import my.pikrew.ramadhanEvent.listener.*;
 import my.pikrew.ramadhanEvent.manager.CrateManager;
@@ -46,6 +47,10 @@ public final class RamadhanEvent extends JavaPlugin {
         CrateCommand crateCmd = new CrateCommand(this);
         getCommand("ramadhanbox").setExecutor(crateCmd);
         getCommand("ramadhanbox").setTabCompleter(crateCmd);
+
+        RamadhanTimeCommand ramadhantimeCmd = new RamadhanTimeCommand(this);
+        getCommand("ramadhan").setExecutor(ramadhantimeCmd);
+        getCommand("ramadhan").setTabCompleter(ramadhantimeCmd);
 
         RegionWandCommand wandCmd = new RegionWandCommand(this, regionWandListener);
         getCommand("ramadhanwand").setExecutor(wandCmd);
