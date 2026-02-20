@@ -1,0 +1,4 @@
+name: RamadhanEvent
+version: '1.0-SNAPSHOT'
+main: my.pikrew.ramadhanEvent.RamadhanEvent
+api-version: '1.21'
