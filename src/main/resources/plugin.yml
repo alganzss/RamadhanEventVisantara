@@ -2,3 +2,17 @@ name: RamadhanEvent
 version: '1.0-SNAPSHOT'
 main: my.pikrew.ramadhanEvent.RamadhanEvent
 api-version: '1.21'
+
+commands:
+  ramadhan:
+    description: Main command for RamadhanEvent plugin
+    usage: /ramadhan <reload|debug>
+    aliases: [re, ramadan]
+
+permissions:
+  ramadhan.reload:
+    description: Allows reloading the plugin configuration
+    default: op
+  ramadhan.debug:
+    description: Allows viewing debug information
+    default: op

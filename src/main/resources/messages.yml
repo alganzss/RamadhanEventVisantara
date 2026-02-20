@@ -1,0 +1,50 @@
+# RamadhanEvent Messages Configuration
+# Use & for color codes
+# For announcements, you can use lists for multi-line messages with gaps
+
+# Command messages
+commands:
+  help: |
+    &6&l=== Ramadhan Event Commands ===
+    &e/ramadhan reload &7- Reload configuration
+    &e/ramadhan debug &7- Show debug information
+  reload: "&a✓ Configuration reloaded successfully!"
+  no-permission: "&cYou don't have permission to use this command!"
+
+# Display messages
+displays:
+  # Action bar message (shown during Ramadhan time)
+  action-bar:
+    text: "&6&l☪ &e&lRAMADHAN TIME &6&l☪ &7| &fTime: &e{time}"
+
+  # Boss bar title (shown during Ramadhan time)
+  boss-bar:
+    title: "&6☪ Ramadhan Fasting - {time} ☪"
+
+# Announcement messages
+# Using lists allows for gaps between lines (each line is sent with a small delay)
+messages:
+  announcements:
+    # Day announcement (Ramadhan time starts - hunger multiplied)
+    day:
+      text:
+        - ""
+        - "&6&l☪ &e&lRAMADHAN TIME HAS BEGUN &6&l☪"
+        - "&7Hunger loss is &cmultiplied &7during fasting"
+        - "&7Food consumption is &creduced &7to test your patience"
+        - "&7Break your fast when the time comes!"
+        - ""
+
+    # Night announcement (Normal time starts - hunger normal)
+    night:
+      text:
+        - ""
+        - "&6&l☪ &e&lTIME TO BREAK YOUR FAST! &6&l☪"
+        - "&7Hunger has returned to normal"
+        - "&7Eat and drink to regain your strength!"
+        - ""
+
+# Single-line messages (not used in lists)
+info:
+  current-period: "&eCurrent period: &f{0}"
+  time-range: "&eRamadhan time: &f{0}"

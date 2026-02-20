@@ -1,0 +1,72 @@
+# RamadhanEvent Configuration
+# Plugin that simulates Ramadhan fasting with realistic hunger mechanics
+
+# Enable debug mode for detailed logging
+debug: false
+
+# Timezone configuration (use format like GMT+07:00, GMT-05:00, etc.)
+# This is used to determine the current time for your server
+timezone: "GMT+07:00"
+
+# Time settings
+# Format: "HH:mm" or "H:mm" (24-hour format with minutes support)
+# Examples: "8:00", "18:15", "6:30", "21:45"
+times:
+  # When Ramadhan time starts (special hunger mechanics enabled)
+  day: "8:00"
+
+  # When normal time starts (vanilla hunger mechanics)
+  night: "18:00"
+
+# Ramadhan time mechanics (during DAY period)
+ramadhan-time:
+  # Hunger loss multiplier - how much faster players get hungry
+  # 2.0 = twice as fast, 1.5 = 50% faster, 3.0 = three times faster
+  hunger-loss-multiplier: 2.0
+
+  # Food consumption multiplier - how much food restores hunger
+  # 0.5 = half restoration, 0.3 = 30% restoration, 0.7 = 70% restoration
+  food-consumption-multiplier: 0.5
+
+# Display settings
+displays:
+  # Action Bar display (text above hotbar)
+  action-bar:
+    enabled: true
+    # How often to update (in ticks, 20 ticks = 1 second)
+    update-interval: 20
+
+  # Boss Bar display (bar at top of screen)
+  boss-bar:
+    enabled: true
+    # How often to update (in ticks, 20 ticks = 1 second)
+    update-interval: 20
+    # Color: BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW
+    color: "YELLOW"
+    # Style: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
+    style: "SOLID"
+
+# Message settings
+messages:
+  # Announcement settings
+  announcements:
+    # Day transition announcement (when Ramadhan time starts)
+    day:
+      enabled: true
+      # Sound settings
+      sound:
+        enabled: true
+        # Sound type (see: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html)
+        type: "ENTITY_PLAYER_LEVELUP"
+        volume: 1.0
+        pitch: 1.0
+
+    # Night transition announcement (when normal time starts)
+    night:
+      enabled: true
+      # Sound settings
+      sound:
+        enabled: true
+        type: "BLOCK_NOTE_BLOCK_BELL"
+        volume: 1.0
+        pitch: 1.2
