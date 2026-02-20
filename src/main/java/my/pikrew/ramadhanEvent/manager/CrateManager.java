@@ -32,11 +32,17 @@ public class CrateManager {
 
     // Per-auto-spawn-cycle broadcast guards
     private boolean autoStartBroadcasted = false;
-    private boolean autoHalfBroadcasted = false;
+    private boolean autoHalfBroadcasted  = false;
     private boolean autoExpiredBroadcasted = false;
 
     public CrateManager(RamadhanEvent plugin) {
         this.plugin = plugin;
+    }
+
+    /** Called on /ramadhan reload so crate settings pick up fresh config. */
+    public void reloadConfig() {
+        // Currently no cached crate config fields; tasks re-read config live.
+        // Extend here if caching is added in the future.
     }
 
     public Map<UUID, CrateData> getActiveCrates() {
@@ -57,8 +63,7 @@ public class CrateManager {
         handleRewards(player);
 
         if (!data.isAutoSpawn()) {
-            String msg = plugin.getConfig().getString("crate.messages.claimed-broadcast", "&b%player% &7claimed the box!");
-            broadcast(msg.replace("%player%", player.getName()));
+            broadcastList("crate.claimed-broadcast", "%player%", player.getName());
         }
 
         data.cancel();
@@ -91,8 +96,7 @@ public class CrateManager {
                     + " " + loc.getBlockX()
                     + " " + loc.getBlockY()
                     + " " + loc.getBlockZ();
-            String msg = plugin.getConfig().getString("crate.messages.manual-spawn-broadcast", "&aCrate spawned at %location%!");
-            broadcast(msg.replace("%location%", locationString));
+            broadcastList("crate.manual-spawn-broadcast", "%location%", locationString);
         }
 
         data.startTimer();
@@ -109,20 +113,20 @@ public class CrateManager {
         if (world == null) return null;
 
         int minX = config.getInt("crate.region.min-x", -500);
-        int maxX = config.getInt("crate.region.max-x", 500);
+        int maxX = config.getInt("crate.region.max-x",  500);
         int minZ = config.getInt("crate.region.min-z", -500);
-        int maxZ = config.getInt("crate.region.max-z", 500);
-        int minY = config.getInt("crate.region.min-y", 60);
-        int maxY = config.getInt("crate.region.max-y", 256);
+        int maxZ = config.getInt("crate.region.max-z",  500);
+        int minY = config.getInt("crate.region.min-y",  60);
+        int maxY = config.getInt("crate.region.max-y",  256);
 
         Random rand = ThreadLocalRandom.current();
         for (int attempt = 0; attempt < 50; attempt++) {
             int x = rand.nextInt(maxX - minX + 1) + minX;
             int z = rand.nextInt(maxZ - minZ + 1) + minZ;
             for (int y = minY; y < maxY - 2; y++) {
-                Block floor = world.getBlockAt(x, y, z);
+                Block floor     = world.getBlockAt(x, y,     z);
                 Block crateSpot = world.getBlockAt(x, y + 1, z);
-                Block airAbove = world.getBlockAt(x, y + 2, z);
+                Block airAbove  = world.getBlockAt(x, y + 2, z);
                 if (floor.getType().isSolid() && crateSpot.getType().isAir() && airAbove.getType().isAir()) {
                     return spawnCrateAt(new Location(world, x, y + 1, z), true);
                 }
@@ -151,8 +155,7 @@ public class CrateManager {
 
         if (successfulSpawns > 0) {
             String worldList = String.join(", ", worldsSpawnedIn);
-            String msg = config.getString("crate.messages.auto-spawn-broadcast", "&aEvent Box has spawned in %world%");
-            broadcast(msg.replace("%world%", worldList));
+            broadcastList("crate.auto-spawn-broadcast", "%world%", worldList);
         } else {
             plugin.getLogger().warning("[CrateManager] Failed to find safe spawn locations for any crate!");
         }
@@ -178,10 +181,9 @@ public class CrateManager {
                                 autoStartBroadcasted = true;
                                 manualAutoSpawnOnce();
                             }
-                            // Reset flags after 1 minute
                             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                                autoStartBroadcasted = false;
-                                autoHalfBroadcasted = false;
+                                autoStartBroadcasted   = false;
+                                autoHalfBroadcasted    = false;
                                 autoExpiredBroadcasted = false;
                             }, 20L * 60);
                             break;
@@ -210,10 +212,10 @@ public class CrateManager {
     }
 
     public String getActiveCratesStatus() {
-        if (!activeCrates.isEmpty()) return "Has spawned!";
+        if (!activeCrates.isEmpty()) return plugin.getMessageUtil().getMessage("crate.status.has-spawned");
 
         List<String> spawnTimes = plugin.getConfig().getStringList("crate.spawn-times");
-        if (spawnTimes.isEmpty()) return "Not scheduled.";
+        if (spawnTimes.isEmpty()) return plugin.getMessageUtil().getMessage("crate.status.not-scheduled");
 
         LocalTime now = LocalTime.now();
         LocalTime nextSpawn = null;
@@ -234,17 +236,23 @@ public class CrateManager {
                 String[] split = spawnTimes.get(0).split(":");
                 nextSpawn = LocalTime.of(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
             } catch (Exception ignored) {
-                return "Error calculating next spawn.";
+                return plugin.getMessageUtil().getMessage("crate.status.error");
             }
         }
 
         Duration duration = Duration.between(now, nextSpawn);
         if (duration.isNegative()) duration = duration.plusDays(1);
 
-        long hours = duration.toHours();
+        long hours   = duration.toHours();
         long minutes = duration.toMinutes() % 60;
-        return "Next Box: " + hours + "h " + minutes + "m";
+        return plugin.getMessageUtil().getMessage("crate.status.next-spawn")
+                .replace("{hours}",   String.valueOf(hours))
+                .replace("{minutes}", String.valueOf(minutes));
     }
+
+    // ---------------------------------------------------------------
+    // Skull / texture helpers
+    // ---------------------------------------------------------------
 
     public boolean applyTextureToMeta(SkullMeta meta, String base64) {
         if (meta == null || base64 == null || base64.isEmpty()) return false;
@@ -300,7 +308,6 @@ public class CrateManager {
                 field.set(target, profile);
                 return true;
             }
-            // Try wrapper constructor (CraftBukkit >= 1.20.5)
             for (Constructor<?> c : fieldType.getDeclaredConstructors()) {
                 Class<?>[] params = c.getParameterTypes();
                 if (params.length == 1 && params[0].isAssignableFrom(GameProfile.class)) {
@@ -314,6 +321,10 @@ public class CrateManager {
             return false;
         }
     }
+
+    // ---------------------------------------------------------------
+    // Rewards
+    // ---------------------------------------------------------------
 
     private void handleRewards(Player player) {
         List<String> rewards = plugin.getConfig().getStringList("crate.rewards");
@@ -353,11 +364,40 @@ public class CrateManager {
         }
     }
 
-    private void broadcast(String msg) {
-        String prefix = plugin.getConfig().getString("crate.messages.prefix",
-                plugin.getConfig().getString("prefix", "&6[RamadhanEvent] &r"));
-        Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', prefix + msg));
+    // ---------------------------------------------------------------
+    // Broadcast via MessageUtil (supports list format)
+    // ---------------------------------------------------------------
+
+    /**
+     * Broadcasts a message path from messages.yml.
+     * If the path is a list, each entry is sent with a 1-tick stagger.
+     * A single placeholder pair (token → replacement) is applied to every line.
+     */
+    private void broadcastList(String path, String token, String replacement) {
+        List<String> lines = plugin.getMessageUtil().getMessageList(path);
+        if (!lines.isEmpty()) {
+            // List format
+            for (int i = 0; i < lines.size(); i++) {
+                final String line = lines.get(i).replace(token, replacement);
+                if (i == 0) {
+                    Bukkit.broadcastMessage(line);
+                } else {
+                    final int delay = i;
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> Bukkit.broadcastMessage(line), delay);
+                }
+            }
+        } else {
+            // Single string fallback
+            String single = plugin.getMessageUtil().getMessage(path).replace(token, replacement);
+            if (!single.startsWith("Message not found")) {
+                Bukkit.broadcastMessage(single);
+            }
+        }
     }
+
+    // ---------------------------------------------------------------
+    // Inner CrateData
+    // ---------------------------------------------------------------
 
     public class CrateData {
         private final UUID id;
@@ -389,25 +429,19 @@ public class CrateManager {
 
                     if (autoSpawn && !autoHalfBroadcasted && ticksLeft <= half) {
                         autoHalfBroadcasted = true;
-                        String msg = plugin.getConfig().getString("crate.messages.half-auto",
-                                "&6Auto Box disappears in &e%seconds%s!");
-                        broadcast(msg.replace("%seconds%", String.valueOf(ticksLeft)));
+                        broadcastList("crate.half-auto", "%seconds%", String.valueOf(ticksLeft));
 
                     } else if (!autoSpawn && !halfBroadcasted && ticksLeft <= half) {
                         halfBroadcasted = true;
-                        String msg = plugin.getConfig().getString("crate.messages.half-manual",
-                                "&6Box disappears in &e%seconds%s!");
-                        broadcast(msg.replace("%seconds%", String.valueOf(ticksLeft)));
+                        broadcastList("crate.half-manual", "%seconds%", String.valueOf(ticksLeft));
                     }
 
                     if (ticksLeft <= 0) {
                         if (autoSpawn && !autoExpiredBroadcasted) {
                             autoExpiredBroadcasted = true;
-                            broadcast(plugin.getConfig().getString("crate.messages.expired-auto",
-                                    "&cAuto Box disappeared!"));
+                            broadcastList("crate.expired-auto", "", "");
                         } else if (!autoSpawn) {
-                            broadcast(plugin.getConfig().getString("crate.messages.expired-manual",
-                                    "&cBox disappeared unclaimed!"));
+                            broadcastList("crate.expired-manual", "", "");
                         }
 
                         if (location.getBlock().getType() == Material.PLAYER_HEAD) {

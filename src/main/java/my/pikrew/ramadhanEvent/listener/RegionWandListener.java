@@ -52,17 +52,19 @@ public class RegionWandListener implements Listener {
             event.setCancelled(true);
             Location loc = clickedBlock.getLocation();
             pos1Map.put(player.getUniqueId(), loc);
-            sendMessage(player, "&7Position &a1 &7set to: &f" + formatLocation(loc));
+            player.sendMessage(plugin.getMessageUtil().getMessage("commands.wand.pos1-set")
+                    .replace("{location}", formatLocation(loc)));
 
         } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
             if (player.isSneaking()) {
-                sendMessage(player, "&7Use &b/ramadhanwand save &7to save the region.");
+                player.sendMessage(plugin.getMessageUtil().getMessage("commands.wand.save-hint"));
                 return;
             }
             Location loc = clickedBlock.getLocation();
             pos2Map.put(player.getUniqueId(), loc);
-            sendMessage(player, "&7Position &c2 &7set to: &f" + formatLocation(loc));
+            player.sendMessage(plugin.getMessageUtil().getMessage("commands.wand.pos2-set")
+                    .replace("{location}", formatLocation(loc)));
         }
     }
 
@@ -75,11 +77,6 @@ public class RegionWandListener implements Listener {
         String requiredName = ChatColor.translateAlternateColorCodes('&',
                 config.getString("wand-item.name", "&b&lRegion Wand"));
         return meta.hasDisplayName() && meta.getDisplayName().equals(requiredName);
-    }
-
-    private void sendMessage(Player player, String msg) {
-        String prefix = plugin.getConfig().getString("prefix", "&6[RamadhanEvent] &r");
-        player.sendMessage(ChatColor.translateAlternateColorCodes('&', prefix + msg));
     }
 
     private String formatLocation(Location loc) {

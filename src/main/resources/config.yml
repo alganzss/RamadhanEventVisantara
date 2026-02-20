@@ -5,9 +5,6 @@
 # GENERAL
 # ============================================================
 
-# Global chat prefix for crate-related broadcasts.
-prefix: "&6[RamadhanEvent] &r"
-
 # Enable verbose debug logging.
 debug: false
 
@@ -84,7 +81,7 @@ crate:
 
   # Base64 player-head texture for the crate block.
   # Find textures at: https://minecraft-heads.com/
-  texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmYwMDk5MWFlNzljYWMzNGUzNTgzNTdjMTNkYjY5Y2E2ZmVkODJiOGE1OWE5MjE4OWYzZmU0ZmRiMmU0ZTU4OSJ9fX0="
+  texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2U4YmEyOGU5Zjk5OTM3NGMzNWQ1ZmRhY2YyY2E3YTlhMzU3NWIxMTcyMGI5YmQ0OTFlNWVlMWM1ZDllYTllZiJ9fX0="
 
   # 24-hour times at which crates auto-spawn.
   spawn-times:
@@ -95,7 +92,6 @@ crate:
   amount: 3
 
   # ---- Spawn Region ----
-  # Worlds and coordinate bounds for random crate placement.
   region:
     world:
       - world
@@ -103,7 +99,6 @@ crate:
     max-x: 500
     min-z: -500
     max-z: 500
-    # Crates only spawn between these Y levels.
     min-y: 60
     max-y: 256
 
@@ -117,23 +112,8 @@ crate:
     - "10%|item:GOLD_INGOT:5"
     - "5%|command:give %player% netherite_ingot 1"
 
-  # ---- Crate Messages ----
-  messages:
-    # Sent to all online players when auto-spawn fires.  %world% = world name list.
-    auto-spawn-broadcast: "&aEvent Box has spawned in &b%world%&a!"
-    # Sent when a crate is spawned manually.  %location% = "world x y z".
-    manual-spawn-broadcast: "&aCrate spawned at %location%!"
-    # Broadcast when a player claims a crate.  %player% = claimer name.
-    claimed-broadcast: "&b%player% &7claimed the event box!"
-    # Half-lifetime warnings.
-    half-auto:    "&6The auto box disappears in &e%seconds%s!"
-    half-manual:  "&6The box disappears in &e%seconds%s!"
-    # Expiry notices.
-    expired-auto:   "&cThe auto box disappeared unclaimed!"
-    expired-manual: "&cThe box disappeared unclaimed!"
-
 # ============================================================
-# REGION WAND  (/ramadhanwand)
+# REGION WAND  (/ramadhan wand)
 # Sets the bounding box for random crate spawning.
 # ============================================================
 wand-item:
@@ -143,14 +123,14 @@ wand-item:
     - "&7Left-Click  &8» &aSet Position 1"
     - "&7Right-Click &8» &cSet Position 2"
     - ""
-    - "&eRun &b/ramadhanwand save &eto save the region."
+    - "&eRun &b/ramadhan wand save &eto save the region."
 
 ghost-spawn:
   check-interval-ticks: 1200
   mob-keys:
-   Ghost_Pocong
-   Ghost_Kuntilanak
-   Ghost_Setan
+    Ghost_Pocong
+    Ghost_Kuntilanak
+    Ghost_Setan
 
 mobs:
   Ghost_Pocong:

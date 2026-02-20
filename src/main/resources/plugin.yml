@@ -4,26 +4,15 @@ main: my.pikrew.ramadhanEvent.RamadhanEvent
 api-version: '1.21'
 
 commands:
-  commands:
-    ramadhanintegrationmobs:
-      description: Ramadhan Integration Mobs command
-      usage: /ramadhanintegrationmobs [status|refresh]
-      permission: ramadhanevent.admin
-
   ramadhan:
-    description: Ramadhan time management command.
-    usage: /ramadhan <reload|debug>
+    description: Main RamadhanEvent command (time, crate box, wand, reload, debug).
+    usage: /ramadhan <reload|debug|box|wand>
     aliases: [re, ramadan]
 
-  ramadhanbox:
-    description: Event crate admin command.
-    usage: /ramadhanbox <spawn|spawnauto|remove|status|reload|help>
-    aliases: [rbox, ramadanbox]
-
-  ramadhanwand:
-    description: Region wand tool for setting crate spawn boundaries.
-    usage: /ramadhanwand <give|save|reset>
-    aliases: [rwand, ramadanwand]
+  ramadhanintegrationmobs:
+    description: Ramadhan Integration Mobs command
+    usage: /ramadhanintegrationmobs [status|refresh]
+    permission: ramadhanevent.admin
 
 permissions:
 
@@ -34,13 +23,10 @@ permissions:
   ramadhan.debug:
     description: View debug information.
     default: op
-  ramadhan.spawn:
-    description: Allows viewing and managing ghost spawn rates
-    default: op
 
   # --- Crate admin ---
   ramadhan.crate.admin:
-    description: Full access to /ramadhanbox.
+    description: Full access to /ramadhan box.
     default: op
 
   # --- Wand ---
@@ -55,4 +41,9 @@ permissions:
     default: op
   ramadhan.wand.reset:
     description: Reset wand position selections.
+    default: op
+
+  # --- Mobs integration ---
+  ramadhanevent.admin:
+    description: Access to /ramadhanintegrationmobs.
     default: op

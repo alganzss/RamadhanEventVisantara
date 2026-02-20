@@ -1,9 +1,7 @@
 package my.pikrew.ramadhanEvent;
 
-import my.pikrew.ramadhanEvent.commands.CrateCommand;
 import my.pikrew.ramadhanEvent.commands.RamadhanCommand;
-import my.pikrew.ramadhanEvent.commands.RamadhanTimeCommand;
-import my.pikrew.ramadhanEvent.commands.RegionWandCommand;
+import my.pikrew.ramadhanEvent.commands.RamadhanIntegrationMobsCommand;
 import my.pikrew.ramadhanEvent.listener.*;
 import my.pikrew.ramadhanEvent.manager.CrateManager;
 import my.pikrew.ramadhanEvent.manager.DisplayManager;
@@ -18,7 +16,6 @@ public final class RamadhanEvent extends JavaPlugin {
     private MessageUtil messageUtil;
     private DisplayManager displayManager;
     private SpawnRateManager spawnRateManager;
-    private HungerListener hungerListener;
     private TransitionTask transitionTask;
     private CrateManager crateManager;
     private RegionWandListener regionWandListener;
@@ -44,22 +41,14 @@ public final class RamadhanEvent extends JavaPlugin {
         displayManager.start();
         crateManager.startAutoSpawnTask();
 
-        CrateCommand crateCmd = new CrateCommand(this);
-        getCommand("ramadhanbox").setExecutor(crateCmd);
-        getCommand("ramadhanbox").setTabCompleter(crateCmd);
+        RamadhanCommand ramadhanCmd = new RamadhanCommand(this, regionWandListener);
+        getCommand("ramadhan").setExecutor(ramadhanCmd);
+        getCommand("ramadhan").setTabCompleter(ramadhanCmd);
 
-        RamadhanTimeCommand ramadhantimeCmd = new RamadhanTimeCommand(this);
-        getCommand("ramadhan").setExecutor(ramadhantimeCmd);
-        getCommand("ramadhan").setTabCompleter(ramadhantimeCmd);
-
-        RegionWandCommand wandCmd = new RegionWandCommand(this, regionWandListener);
-        getCommand("ramadhanwand").setExecutor(wandCmd);
-        getCommand("ramadhanwand").setTabCompleter(wandCmd);
-
-        // ↓ Tambahan baru saja, tidak ada yang diubah di atas
-        RamadhanCommand ramadhanCmd = new RamadhanCommand(this);
-        getCommand("ramadhanintegrationmobs").setExecutor(ramadhanCmd);
-        getCommand("ramadhanintegrationmobs").setTabCompleter(ramadhanCmd);
+        // Separate mobs integration command
+        RamadhanIntegrationMobsCommand mobsCmd = new RamadhanIntegrationMobsCommand(this);
+        getCommand("ramadhanintegrationmobs").setExecutor(mobsCmd);
+        getCommand("ramadhanintegrationmobs").setTabCompleter(mobsCmd);
 
         if (getConfig().getBoolean("debug", false)) {
             getLogger().info("=== DEBUG MODE ENABLED ===");

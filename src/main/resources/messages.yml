@@ -1,31 +1,109 @@
 # RamadhanEvent Messages Configuration
-# Use & for color codes
-# For announcements, you can use lists for multi-line messages with gaps
+# Use & for color codes.
+# Any message that supports a list will broadcast each line in sequence.
+# Placeholders shown inline with {curly} or %percent% notation per section.
 
-# Command messages
+# ============================================================
+# COMMAND MESSAGES  (shared)
+# ============================================================
 commands:
-  help: |
-    &6&l=== Ramadhan Event Commands ===
-    &e/ramadhan reload &7- Reload configuration
-    &e/ramadhan debug &7- Show debug information
-  reload: "&a✓ Configuration reloaded successfully!"
   no-permission: "&cYou don't have permission to use this command!"
+  reload: "&a✓ All configurations reloaded successfully!"
 
-# Display messages
+  # /ramadhan  (no args — full help listing)
+  help:
+    - ""
+    - "&6&l=== RamadhanEvent Commands ==="
+    - "&e/ramadhan reload        &7- Reload all configuration"
+    - "&e/ramadhan debug         &7- Show debug information"
+    - "&e/ramadhan box <sub>     &7- Manage event crates"
+    - "&e/ramadhan wand <sub>    &7- Region wand tool"
+    - "&e/ramadhanintegrationmobs &7- Mob spawn management"
+    - ""
+
+  # /ramadhan box help
+  box:
+    help:
+      - ""
+      - "&6&l=== Crate Box Commands ==="
+      - "&b/{label} box spawn      &7- Spawn a crate at your location"
+      - "&b/{label} box spawnauto  &7- Trigger the auto-spawn task now"
+      - "&b/{label} box remove     &7- Remove all active crates"
+      - "&b/{label} box status     &7- Show active crates & next spawn time"
+      - "&b/{label} wand           &7- Open the region wand tool"
+      - ""
+    spawned:        "&aCrate spawned at your location."
+    spawned-random: "&aCrate spawned at a random location."
+    spawn-failed:   "&cFailed to find a valid spawn location."
+    spawnauto:      "&aAuto-spawn triggered!"
+    removed:        "&aAll active crates removed."
+    active-count:   "&7Active crates: &a{count}"
+    location:       "&7 - &f{location}"
+    next-spawn:     "&7{value}"
+    world-not-found: "&cWorld not found: {world}"
+    teleported:     "&aTeleported to crate location."
+    tp-prefix:      ""        # text shown before the clickable location link (leave blank for none)
+    tp-hover:       "Click to teleport"
+
+  # /ramadhan wand
+  wand:
+    player-only:        "&cOnly players can use this command."
+    usage:              "&cUsage: /{label} wand <give|save|reset>"
+    given:
+      - "&7You received the &b&lRegion Wand&7."
+      - "&7Left-click &8» &aSet Pos 1   &8|   &7Right-click &8» &cSet Pos 2"
+      - "&7Use &b/ramadhan wand save &7when both positions are set."
+    pos1-set:           "&7Position &a1 &7set to: &f{location}"
+    pos2-set:           "&7Position &c2 &7set to: &f{location}"
+    save-hint:          "&7Use &b/ramadhan wand save &7to save the region."
+    missing-positions:  "&cPlease set both Position 1 and Position 2 first."
+    different-worlds:   "&cBoth positions must be in the same world."
+    world-added:        "&7World &e{world} &7added to the spawn region."
+    world-exists:       "&7World &e{world} &7is already in the spawn region."
+    saved:
+      - "&a&lRegion saved successfully!"
+      - "&7{coords}"
+    reset:              "&7Wand positions have been &areset&7."
+
+# ============================================================
+# DEBUG MESSAGES  (/ramadhan debug)
+# ============================================================
+debug:
+  header:            "&6=== Ramadhan Debug Info ==="
+  server-time:       "&eServer Time: &f{time}"
+  period:            "&eCurrent Period: &f{period}"
+  is-ramadhan:       "&eIs Ramadhan Time: &f{value}"
+  day-start:         "&eDay Start: &f{time}"
+  night-start:       "&eNight Start: &f{time}"
+  timezone:          "&eTimezone: &f{value}"
+  debug-mode:        "&eDebug Mode: &f{value}"
+  mechanics-header:  "&6=== Ramadhan Mechanics ==="
+  hunger-multiplier: "&eHunger Loss Multiplier: &f{value}x"
+  food-multiplier:   "&eFood Consumption Multiplier: &f{value}x"
+  display-header:    "&6=== Display Settings ==="
+  action-bar:        "&eAction Bar: &f{value}"
+  boss-bar:          "&eBoss Bar: &f{value}"
+  crate-header:      "&6=== Crate Status ==="
+  crate-active:      "&eActive Crates: &a{count}"
+  crate-spawn-times: "&eSpawn Times: &f{value}"
+  crate-status:      "&eSchedule: &f{value}"
+  crate-location:    "&7 - &f{location}"
+
+# ============================================================
+# DISPLAY MESSAGES
+# ============================================================
 displays:
-  # Action bar message (shown during Ramadhan time)
   action-bar:
     text: "&6&l☪ &e&lRAMADHAN TIME &6&l☪ &7| &fTime: &e{time}"
 
-  # Boss bar title (shown during Ramadhan time)
   boss-bar:
     title: "&6☪ Ramadhan Fasting - {time} ☪"
 
-# Announcement messages
-# Using lists allows for gaps between lines (each line is sent with a small delay)
+# ============================================================
+# TRANSITION ANNOUNCEMENTS
+# ============================================================
 messages:
   announcements:
-    # Day announcement (Ramadhan time starts - hunger multiplied)
     day:
       text:
         - ""
@@ -34,8 +112,6 @@ messages:
         - "&7Food consumption is &creduced &7to test your patience"
         - "&7Break your fast when the time comes!"
         - ""
-
-    # Night announcement (Normal time starts - hunger normal)
     night:
       text:
         - ""
@@ -44,7 +120,48 @@ messages:
         - "&7Eat and drink to regain your strength!"
         - ""
 
-# Single-line messages (not used in lists)
+# ============================================================
+# CRATE MESSAGES  (all moved from config.yml)
+# Use lists for multi-line broadcasts, or a single string for one-liners.
+# Placeholders: %player%, %world%, %location%, %seconds%
+# ============================================================
+crate:
+  # Broadcast when auto-spawn fires. %world% = world name list.
+  auto-spawn-broadcast:
+    - ""
+    - "&a&l✦ Event Box Has Spawned! &a&l✦"
+    - "&7The event box appeared in &b%world%&7!"
+    - "&7Find and claim it before it disappears!"
+    - ""
+
+  # Broadcast when a crate is spawned manually. %location% = "world x y z".
+  manual-spawn-broadcast: "&aCrate spawned at &f%location%&a!"
+
+  # Broadcast when a player claims a crate. %player% = claimer name.
+  claimed-broadcast: "&b%player% &7claimed the event box!"
+
+  # Half-lifetime warnings. %seconds% = seconds remaining.
+  half-auto:
+    - "&6&l⚠ &eThe auto box disappears in &c%seconds%s&e!"
+  half-manual:
+    - "&6&l⚠ &eThe box disappears in &c%seconds%s&e!"
+
+  # Expiry notices.
+  expired-auto:
+    - "&c✗ The auto event box disappeared unclaimed!"
+  expired-manual:
+    - "&c✗ The box disappeared unclaimed!"
+
+  # Status strings returned by CrateManager (used in /ramadhan debug & box status).
+  status:
+    has-spawned:    "&aHas spawned!"
+    not-scheduled:  "&7Not scheduled."
+    error:          "&cError calculating next spawn."
+    next-spawn:     "&7Next Box: &e{hours}h {minutes}m"
+
+# ============================================================
+# MISC
+# ============================================================
 info:
   current-period: "&eCurrent period: &f{0}"
-  time-range: "&eRamadhan time: &f{0}"
+  time-range:     "&eRamadhan time: &f{0}"
