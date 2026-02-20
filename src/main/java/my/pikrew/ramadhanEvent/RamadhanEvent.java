@@ -1,6 +1,7 @@
 package my.pikrew.ramadhanEvent;
 
 import my.pikrew.ramadhanEvent.commands.CrateCommand;
+import my.pikrew.ramadhanEvent.commands.RamadhanCommand;
 import my.pikrew.ramadhanEvent.commands.RamadhanTimeCommand;
 import my.pikrew.ramadhanEvent.commands.RegionWandCommand;
 import my.pikrew.ramadhanEvent.listener.*;
@@ -9,8 +10,6 @@ import my.pikrew.ramadhanEvent.manager.DisplayManager;
 import my.pikrew.ramadhanEvent.manager.SpawnRateManager;
 import my.pikrew.ramadhanEvent.manager.TimeManager;
 import my.pikrew.ramadhanEvent.util.MessageUtil;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class RamadhanEvent extends JavaPlugin {
@@ -19,7 +18,6 @@ public final class RamadhanEvent extends JavaPlugin {
     private MessageUtil messageUtil;
     private DisplayManager displayManager;
     private SpawnRateManager spawnRateManager;
-    private HungerListener hungerListener;
     private TransitionTask transitionTask;
     private CrateManager crateManager;
     private RegionWandListener regionWandListener;
@@ -29,16 +27,20 @@ public final class RamadhanEvent extends JavaPlugin {
         saveDefaultConfig();
         saveResource("messages.yml", false);
 
-        // Core managers
-        messageUtil  = new MessageUtil(this);
-        timeManager  = new TimeManager(this);
+        messageUtil    = new MessageUtil(this);
+        timeManager    = new TimeManager(this);
+        spawnRateManager = new SpawnRateManager(this, timeManager);
         displayManager = new DisplayManager(this, messageUtil, timeManager);
-        crateManager = new CrateManager(this);
+        crateManager   = new CrateManager(this);
+
+        spawnRateManager.start();
 
         regionWandListener = new RegionWandListener(this);
         getServer().getPluginManager().registerEvents(new HungerListener(this, timeManager), this);
         getServer().getPluginManager().registerEvents(new InteractListener(this), this);
         getServer().getPluginManager().registerEvents(regionWandListener, this);
+        getServer().getPluginManager().registerEvents(new GhostSpawnListener(this), this);
+        getServer().getPluginManager().registerEvents(new MobDeathListener(this), this);
 
         transitionTask = new TransitionTask(this, timeManager, messageUtil);
         transitionTask.runTaskTimer(this, 0L, 20L);
@@ -48,6 +50,10 @@ public final class RamadhanEvent extends JavaPlugin {
         RamadhanTimeCommand ramadhanCmd = new RamadhanTimeCommand(this);
         getCommand("ramadhan").setExecutor(ramadhanCmd);
         getCommand("ramadhan").setTabCompleter(ramadhanCmd);
+
+        RamadhanCommand reCmd = new RamadhanCommand(this);
+        getCommand("re").setExecutor(reCmd);
+        getCommand("re").setTabCompleter(reCmd);
 
         CrateCommand crateCmd = new CrateCommand(this);
         getCommand("ramadhanbox").setExecutor(crateCmd);
@@ -59,12 +65,12 @@ public final class RamadhanEvent extends JavaPlugin {
 
         if (getConfig().getBoolean("debug", false)) {
             getLogger().info("=== DEBUG MODE ENABLED ===");
-            getLogger().info("Day time: "  + getConfig().getString("times.day"));
+            getLogger().info("Day time: "   + getConfig().getString("times.day"));
             getLogger().info("Night time: " + getConfig().getString("times.night"));
-            getLogger().info("Timezone: "  + getConfig().getString("timezone"));
-            getLogger().info("Hunger Loss Multiplier: "    + getConfig().getDouble("ramadhan-time.hunger-loss-multiplier"));
+            getLogger().info("Timezone: "   + getConfig().getString("timezone"));
+            getLogger().info("Hunger Loss Multiplier: "      + getConfig().getDouble("ramadhan-time.hunger-loss-multiplier"));
             getLogger().info("Food Consumption Multiplier: " + getConfig().getDouble("ramadhan-time.food-consumption-multiplier"));
-            getLogger().info("Crate spawn-times: " + getConfig().getStringList("crate.spawn-times"));
+            getLogger().info("Crate spawn-times: "           + getConfig().getStringList("crate.spawn-times"));
         }
 
         getLogger().info("RamadhanEvent enabled! Day: " + getConfig().getString("times.day")
@@ -74,18 +80,16 @@ public final class RamadhanEvent extends JavaPlugin {
                 + " (" + (timeManager.isRamadhanTime() ? "ramadhan" : "vanilla") + ")");
     }
 
-    public TimeManager getTimeManager() {
-        return timeManager;
+    @Override
+    public void onDisable() {
+        if (spawnRateManager != null) spawnRateManager.stop();
+        if (crateManager != null)     crateManager.cleanupAll();
+        if (displayManager != null)   displayManager.stop();
     }
 
-    public MessageUtil getMessageUtil() {
-        return messageUtil;
-    }
-
-    public SpawnRateManager getSpawnRateManager() {
-        return spawnRateManager;
-    }
-
-    public DisplayManager getDisplayManager() { return displayManager; }
-    public CrateManager getCrateManager()     { return crateManager; }
+    public TimeManager getTimeManager()              { return timeManager; }
+    public MessageUtil getMessageUtil()              { return messageUtil; }
+    public SpawnRateManager getSpawnRateManager()    { return spawnRateManager; }
+    public DisplayManager getDisplayManager()        { return displayManager; }
+    public CrateManager getCrateManager()            { return crateManager; }
 }

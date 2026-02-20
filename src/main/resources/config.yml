@@ -144,3 +144,38 @@ wand-item:
     - "&7Right-Click &8» &cSet Position 2"
     - ""
     - "&eRun &b/ramadhanwand save &eto save the region."
+
+ghost-spawn:
+  check-interval-ticks: 1200
+  mob-keys:
+   Ghost_Pocong
+   Ghost_Kuntilanak
+   Ghost_Setan
+
+mobs:
+  Ghost_Pocong:
+    enabled: true
+    day-chance: 0.05
+    night-chance: 0.15
+    day-min-level: 1
+    day-max-level: 3
+    night-min-level: 5
+    night-max-level: 10
+
+  Ghost_Kuntilanak:
+    enabled: true
+    day-chance: 0.03
+    night-chance: 0.12
+    day-min-level: 1
+    day-max-level: 3
+    night-min-level: 5
+    night-max-level: 10
+
+  Ghost_Setan:
+    enabled: true
+    day-chance: 0.01
+    night-chance: 0.05
+    day-min-level: 1
+    day-max-level: 2
+    night-min-level: 3
+    night-max-level: 7
