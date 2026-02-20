@@ -5,6 +5,7 @@ import my.pikrew.ramadhanEvent.commands.RamadhanTimeCommand;
 import my.pikrew.ramadhanEvent.commands.RegionWandCommand;
 import my.pikrew.ramadhanEvent.listener.HungerListener;
 import my.pikrew.ramadhanEvent.listener.MobDeathListener;
+import my.pikrew.ramadhanEvent.listener.RegionWandListener;
 import my.pikrew.ramadhanEvent.listener.TransitionTask;
 import my.pikrew.ramadhanEvent.manager.CrateManager;
 import my.pikrew.ramadhanEvent.manager.DisplayManager;
@@ -57,77 +58,6 @@ public final class RamadhanEvent extends JavaPlugin {
         getLogger().info("RamadhanEvent disabled.");
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!command.getName().equalsIgnoreCase("ramadhan")) return false;
-
-        if (args.length == 0) {
-            sender.sendMessage(messageUtil.getMessage("commands.help"));
-            return true;
-        }
-
-        switch (args[0].toLowerCase()) {
-            case "reload" -> {
-                if (!sender.hasPermission("ramadhan.reload")) {
-                    sender.sendMessage(messageUtil.getMessage("commands.no-permission"));
-                    return true;
-                }
-                reloadConfig();
-                messageUtil.reloadMessages();
-                timeManager.reload();
-                displayManager.reload();
-                spawnRateManager.reload();
-                hungerListener.reloadValues();
-                sender.sendMessage(messageUtil.getMessage("commands.reload"));
-
-                if (getConfig().getBoolean("debug", false)) {
-                    sender.sendMessage("§e[Debug] Time: " + timeManager.getCurrentTimeString()
-                            + " | Period: " + timeManager.getCurrentPeriod().name());
-                }
-            }
-            case "debug" -> {
-                if (!sender.hasPermission("ramadhan.debug")) {
-                    sender.sendMessage(messageUtil.getMessage("commands.no-permission"));
-                    return true;
-                }
-                sender.sendMessage("§6=== Ramadhan Debug ===");
-                sender.sendMessage("§eServer Time: §f" + timeManager.getCurrentTimeString());
-                sender.sendMessage("§ePeriod: §f" + timeManager.getCurrentPeriod().name());
-                sender.sendMessage("§eIs Ramadhan Time: §f" + timeManager.isRamadhanTime());
-                sender.sendMessage("§eIs Night Surge: §f" + timeManager.isNightSurge());
-                sender.sendMessage("§eDay Start: §f" + getConfig().getString("times.day"));
-                sender.sendMessage("§eNight Start: §f" + getConfig().getString("times.night"));
-                sender.sendMessage("§eTimezone: §f" + getConfig().getString("timezone"));
-                sender.sendMessage("§eHunger Multiplier: §f" + getConfig().getDouble("ramadhan-time.hunger-loss-multiplier") + "x");
-                sender.sendMessage("§eFood Multiplier: §f" + getConfig().getDouble("ramadhan-time.food-consumption-multiplier") + "x");
-                sender.sendMessage("§eAction Bar: §f" + getConfig().getBoolean("displays.action-bar.enabled"));
-                sender.sendMessage("§eBoss Bar: §f" + getConfig().getBoolean("displays.boss-bar.enabled"));
-            }
-            case "spawnstatus" -> {
-                if (!sender.hasPermission("ramadhan.spawn")) {
-                    sender.sendMessage(messageUtil.getMessage("commands.no-permission"));
-                    return true;
-                }
-                sender.sendMessage("§6=== Ghost Spawn Status ===");
-                sender.sendMessage("§eNight Surge Active: §f" + spawnRateManager.isNightSurgeActive());
-                spawnRateManager.getSpawnDataMap().values().forEach(data ->
-                        sender.sendMessage("§e" + data.getMobKey() + " §7| Chance: §f" + data.getCurrentChance()
-                                + " §7| Level: §f" + data.getCurrentMinLevel() + "-" + data.getCurrentMaxLevel()));
-            }
-            case "spawnrefresh" -> {
-                if (!sender.hasPermission("ramadhan.spawn")) {
-                    sender.sendMessage(messageUtil.getMessage("commands.no-permission"));
-                    return true;
-                }
-                spawnRateManager.forceRefresh();
-                sender.sendMessage("§aGhost spawn rates refreshed.");
-            }
-            default -> sender.sendMessage(messageUtil.getMessage("commands.help"));
-        }
-
-        return true;
-    }
-
     public TimeManager getTimeManager() {
         return timeManager;
     }
@@ -139,4 +69,7 @@ public final class RamadhanEvent extends JavaPlugin {
     public SpawnRateManager getSpawnRateManager() {
         return spawnRateManager;
     }
+
+    public DisplayManager getDisplayManager() { return displayManager; }
+    public CrateManager getCrateManager()     { return crateManager; }
 }
