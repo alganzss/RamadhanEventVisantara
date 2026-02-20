@@ -4,6 +4,12 @@ main: my.pikrew.ramadhanEvent.RamadhanEvent
 api-version: '1.21'
 
 commands:
+  commands:
+    ramadhanintegrationmobs:
+      description: Ramadhan Integration Mobs command
+      usage: /ramadhanintegrationmobs [status|refresh]
+      permission: ramadhanevent.admin
+
   ramadhan:
     description: Ramadhan time management command.
     usage: /ramadhan <reload|debug>

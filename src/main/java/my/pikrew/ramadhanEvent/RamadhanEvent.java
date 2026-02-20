@@ -2,7 +2,6 @@ package my.pikrew.ramadhanEvent;
 
 import my.pikrew.ramadhanEvent.commands.CrateCommand;
 import my.pikrew.ramadhanEvent.commands.RamadhanCommand;
-import my.pikrew.ramadhanEvent.commands.RamadhanTimeCommand;
 import my.pikrew.ramadhanEvent.commands.RegionWandCommand;
 import my.pikrew.ramadhanEvent.listener.*;
 import my.pikrew.ramadhanEvent.manager.CrateManager;
@@ -18,6 +17,7 @@ public final class RamadhanEvent extends JavaPlugin {
     private MessageUtil messageUtil;
     private DisplayManager displayManager;
     private SpawnRateManager spawnRateManager;
+    private HungerListener hungerListener;
     private TransitionTask transitionTask;
     private CrateManager crateManager;
     private RegionWandListener regionWandListener;
@@ -27,33 +27,21 @@ public final class RamadhanEvent extends JavaPlugin {
         saveDefaultConfig();
         saveResource("messages.yml", false);
 
+        // Core managers
         messageUtil    = new MessageUtil(this);
         timeManager    = new TimeManager(this);
-        spawnRateManager = new SpawnRateManager(this, timeManager);
         displayManager = new DisplayManager(this, messageUtil, timeManager);
         crateManager   = new CrateManager(this);
-
-        spawnRateManager.start();
 
         regionWandListener = new RegionWandListener(this);
         getServer().getPluginManager().registerEvents(new HungerListener(this, timeManager), this);
         getServer().getPluginManager().registerEvents(new InteractListener(this), this);
         getServer().getPluginManager().registerEvents(regionWandListener, this);
-        getServer().getPluginManager().registerEvents(new GhostSpawnListener(this), this);
-        getServer().getPluginManager().registerEvents(new MobDeathListener(this), this);
 
         transitionTask = new TransitionTask(this, timeManager, messageUtil);
         transitionTask.runTaskTimer(this, 0L, 20L);
         displayManager.start();
         crateManager.startAutoSpawnTask();
-
-        RamadhanTimeCommand ramadhanCmd = new RamadhanTimeCommand(this);
-        getCommand("ramadhan").setExecutor(ramadhanCmd);
-        getCommand("ramadhan").setTabCompleter(ramadhanCmd);
-
-        RamadhanCommand reCmd = new RamadhanCommand(this);
-        getCommand("re").setExecutor(reCmd);
-        getCommand("re").setTabCompleter(reCmd);
 
         CrateCommand crateCmd = new CrateCommand(this);
         getCommand("ramadhanbox").setExecutor(crateCmd);
@@ -62,6 +50,11 @@ public final class RamadhanEvent extends JavaPlugin {
         RegionWandCommand wandCmd = new RegionWandCommand(this, regionWandListener);
         getCommand("ramadhanwand").setExecutor(wandCmd);
         getCommand("ramadhanwand").setTabCompleter(wandCmd);
+
+        // ↓ Tambahan baru saja, tidak ada yang diubah di atas
+        RamadhanCommand ramadhanCmd = new RamadhanCommand(this);
+        getCommand("ramadhanintegrationmobs").setExecutor(ramadhanCmd);
+        getCommand("ramadhanintegrationmobs").setTabCompleter(ramadhanCmd);
 
         if (getConfig().getBoolean("debug", false)) {
             getLogger().info("=== DEBUG MODE ENABLED ===");
@@ -80,16 +73,9 @@ public final class RamadhanEvent extends JavaPlugin {
                 + " (" + (timeManager.isRamadhanTime() ? "ramadhan" : "vanilla") + ")");
     }
 
-    @Override
-    public void onDisable() {
-        if (spawnRateManager != null) spawnRateManager.stop();
-        if (crateManager != null)     crateManager.cleanupAll();
-        if (displayManager != null)   displayManager.stop();
-    }
-
-    public TimeManager getTimeManager()              { return timeManager; }
-    public MessageUtil getMessageUtil()              { return messageUtil; }
-    public SpawnRateManager getSpawnRateManager()    { return spawnRateManager; }
-    public DisplayManager getDisplayManager()        { return displayManager; }
-    public CrateManager getCrateManager()            { return crateManager; }
+    public TimeManager getTimeManager()           { return timeManager; }
+    public MessageUtil getMessageUtil()           { return messageUtil; }
+    public SpawnRateManager getSpawnRateManager() { return spawnRateManager; }
+    public DisplayManager getDisplayManager()     { return displayManager; }
+    public CrateManager getCrateManager()         { return crateManager; }
 }

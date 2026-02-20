@@ -15,7 +15,7 @@ import java.util.List;
 
 public class RamadhanCommand implements CommandExecutor, TabCompleter {
 
-    private static final List<String> SUBCOMMANDS = Arrays.asList("reload", "status", "refresh");
+    private static final List<String> SUBCOMMANDS = Arrays.asList("status", "refresh");
 
     private final RamadhanEvent plugin;
 
@@ -38,19 +38,12 @@ public class RamadhanCommand implements CommandExecutor, TabCompleter {
         }
 
         switch (args[0].toLowerCase()) {
-            case "reload"  -> handleReload(sender);
             case "status"  -> handleStatus(sender);
             case "refresh" -> handleRefresh(sender);
             default        -> sendHelp(sender);
         }
 
         return true;
-    }
-
-    private void handleReload(CommandSender sender) {
-        plugin.reloadConfig();
-        plugin.getSpawnRateManager().reload();
-        sender.sendMessage(Component.text("[RamadhanEvent] Configuration reloaded.").color(NamedTextColor.GREEN));
     }
 
     private void handleStatus(CommandSender sender) {
@@ -77,9 +70,8 @@ public class RamadhanCommand implements CommandExecutor, TabCompleter {
 
     private void sendHelp(CommandSender sender) {
         sender.sendMessage(Component.text("=== RamadhanEvent Commands ===").color(NamedTextColor.GOLD));
-        sender.sendMessage(Component.text("/re reload  - Reload configuration").color(NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("/re status  - Show current spawn status").color(NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("/re refresh - Force apply spawn rates now").color(NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("/ramadhanintegrationmobs status  - Show current spawn status").color(NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("/ramadhanintegrationmobs refresh - Force apply spawn rates now").color(NamedTextColor.YELLOW));
     }
 
     @Override
