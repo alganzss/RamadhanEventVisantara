@@ -6,10 +6,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
 
 public class HungerListener implements Listener {
+
     private final RamadhanEvent plugin;
     private final TimeManager timeManager;
 
@@ -18,53 +19,49 @@ public class HungerListener implements Listener {
         this.timeManager = timeManager;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onFoodLevelChange(FoodLevelChangeEvent event) {
-        if (!(event.getEntity() instanceof Player)) {
-            return;
-        }
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!timeManager.isRamadhanTime()) return;
 
-        Player player = (Player) event.getEntity();
         int currentLevel = player.getFoodLevel();
-        int newLevel = event.getFoodLevel();
+        int proposedLevel = event.getFoodLevel();
 
-        if (timeManager.isRamadhanTime()) {
-            if (newLevel < currentLevel) {
-                double multiplier = plugin.getConfig().getDouble("ramadhan-time.hunger-loss-multiplier", 2.0);
-                int difference = currentLevel - newLevel;
-                int multipliedDifference = (int) Math.ceil(difference * multiplier);
+        if (proposedLevel <= currentLevel) return;
 
-                int finalLevel = Math.max(0, currentLevel - multipliedDifference);
-                event.setFoodLevel(finalLevel);
+        double multiplier = plugin.getConfig().getDouble("ramadhan-time.food-consumption-multiplier", 0.5);
 
-                if (plugin.getConfig().getBoolean("debug", false)) {
-                    plugin.getLogger().info("[DEBUG] Hunger loss multiplied: " + difference + " -> " + multipliedDifference + " (x" + multiplier + ")");
-                }
-            }
+        int gain = proposedLevel - currentLevel;
+        int reducedGain = (int) Math.ceil(gain * multiplier);
+        int finalLevel = Math.min(20, currentLevel + reducedGain);
+
+        event.setFoodLevel(finalLevel);
+
+        if (plugin.getConfig().getBoolean("debug", false)) {
+            plugin.getLogger().info(
+                    "[DEBUG] Food gain reduced: %d + %d -> %d + %d = %d (multiplier: %.2fx)"
+                            .formatted(currentLevel, gain, currentLevel, reducedGain, finalLevel, multiplier)
+            );
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL)
-    public void onPlayerEat(PlayerItemConsumeEvent event) {
-        Player player = event.getPlayer();
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onExhaustion(EntityExhaustionEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!timeManager.isRamadhanTime()) return;
 
-        if (timeManager.isRamadhanTime()) {
-            double foodMultiplier = plugin.getConfig().getDouble("ramadhan-time.food-consumption-multiplier", 0.5);
+        double multiplier = plugin.getConfig().getDouble("ramadhan-time.hunger-loss-multiplier", 2.0);
 
-            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                int currentFood = player.getFoodLevel();
-                float currentSaturation = player.getSaturation();
+        float originalExhaustion = event.getExhaustion();
+        float scaledExhaustion = (float) (originalExhaustion * multiplier);
 
-                int reducedFood = (int) Math.ceil(currentFood * foodMultiplier);
-                float reducedSaturation = currentSaturation * (float) foodMultiplier;
+        event.setExhaustion(scaledExhaustion);
 
-                player.setFoodLevel(Math.min(20, reducedFood));
-                player.setSaturation(Math.min(20f, reducedSaturation));
-
-                if (plugin.getConfig().getBoolean("debug", false)) {
-                    plugin.getLogger().info("[DEBUG] Food consumption reduced: Food=" + currentFood + " -> " + reducedFood + ", Sat=" + currentSaturation + " -> " + reducedSaturation);
-                }
-            }, 1L);
+        if (plugin.getConfig().getBoolean("debug", false)) {
+            plugin.getLogger().info(
+                    "[DEBUG] Exhaustion scaled: %.4f -> %.4f for %s (multiplier: %.2fx)"
+                            .formatted(originalExhaustion, scaledExhaustion, player.getName(), multiplier)
+            );
         }
     }
 }

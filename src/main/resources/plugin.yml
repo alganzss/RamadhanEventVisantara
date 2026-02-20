@@ -5,14 +5,45 @@ api-version: '1.21'
 
 commands:
   ramadhan:
-    description: Main command for RamadhanEvent plugin
+    description: Ramadhan time management command.
     usage: /ramadhan <reload|debug>
     aliases: [re, ramadan]
 
+  ramadhanbox:
+    description: Event crate admin command.
+    usage: /ramadhanbox <spawn|spawnauto|remove|status|reload|help>
+    aliases: [rbox, eventbox]
+
+  ramadhanwand:
+    description: Region wand tool for setting crate spawn boundaries.
+    usage: /ramadhanwand <give|save|reset>
+    aliases: [rwand]
+
 permissions:
+
+  # --- Ramadhan time ---
   ramadhan.reload:
-    description: Allows reloading the plugin configuration
+    description: Reload the RamadhanEvent configuration.
     default: op
   ramadhan.debug:
-    description: Allows viewing debug information
+    description: View debug information.
+    default: op
+
+  # --- Crate admin ---
+  ramadhan.crate.admin:
+    description: Full access to /ramadhanbox.
+    default: op
+
+  # --- Wand ---
+  ramadhan.wand.use:
+    description: Use the region wand to select positions.
+    default: op
+  ramadhan.wand.give:
+    description: Receive the region wand item.
+    default: op
+  ramadhan.wand.save:
+    description: Save a selected region as the crate spawn zone.
+    default: op
+  ramadhan.wand.reset:
+    description: Reset wand position selections.
     default: op

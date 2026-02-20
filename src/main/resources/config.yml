@@ -1,72 +1,146 @@
 # RamadhanEvent Configuration
-# Plugin that simulates Ramadhan fasting with realistic hunger mechanics
+# Simulates Ramadhan fasting with realistic hunger mechanics + event crates.
 
-# Enable debug mode for detailed logging
+# ============================================================
+# GENERAL
+# ============================================================
+
+# Global chat prefix for crate-related broadcasts.
+prefix: "&6[RamadhanEvent] &r"
+
+# Enable verbose debug logging.
 debug: false
 
-# Timezone configuration (use format like GMT+07:00, GMT-05:00, etc.)
-# This is used to determine the current time for your server
+# ============================================================
+# TIME & TIMEZONE
+# ============================================================
+
+# Timezone used to determine real-world day/night periods.
+# Format: GMT+HH:MM  (e.g. GMT+07:00, GMT-05:00)
 timezone: "GMT+07:00"
 
-# Time settings
-# Format: "HH:mm" or "H:mm" (24-hour format with minutes support)
-# Examples: "8:00", "18:15", "6:30", "21:45"
+# 24-hour clock times for each period boundary.
 times:
-  # When Ramadhan time starts (special hunger mechanics enabled)
+  # When Ramadhan mechanics (hunger multiplier) activate.
   day: "8:00"
-
-  # When normal time starts (vanilla hunger mechanics)
+  # When vanilla mechanics resume (iftar / breaking fast).
   night: "18:00"
 
-# Ramadhan time mechanics (during DAY period)
+# ============================================================
+# RAMADHAN HUNGER MECHANICS  (active during DAY period only)
+# ============================================================
 ramadhan-time:
-  # Hunger loss multiplier - how much faster players get hungry
-  # 2.0 = twice as fast, 1.5 = 50% faster, 3.0 = three times faster
+  # How much faster exhaustion drains the food bar.
+  # 2.0 = twice as fast, 1.5 = 50% faster.
   hunger-loss-multiplier: 2.0
 
-  # Food consumption multiplier - how much food restores hunger
-  # 0.5 = half restoration, 0.3 = 30% restoration, 0.7 = 70% restoration
+  # Fraction of food gain kept when eating during fasting.
+  # 0.5 = only half the hunger is restored.
   food-consumption-multiplier: 0.5
 
-# Display settings
+# ============================================================
+# DISPLAY
+# ============================================================
 displays:
-  # Action Bar display (text above hotbar)
   action-bar:
     enabled: true
-    # How often to update (in ticks, 20 ticks = 1 second)
+    # Update frequency in ticks (20 = 1 second).
     update-interval: 20
 
-  # Boss Bar display (bar at top of screen)
   boss-bar:
     enabled: true
-    # How often to update (in ticks, 20 ticks = 1 second)
     update-interval: 20
-    # Color: BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW
+    # BLUE | GREEN | PINK | PURPLE | RED | WHITE | YELLOW
     color: "YELLOW"
-    # Style: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
+    # SOLID | SEGMENTED_6 | SEGMENTED_10 | SEGMENTED_12 | SEGMENTED_20
     style: "SOLID"
 
-# Message settings
+# ============================================================
+# TRANSITION ANNOUNCEMENTS
+# ============================================================
 messages:
-  # Announcement settings
   announcements:
-    # Day transition announcement (when Ramadhan time starts)
     day:
       enabled: true
-      # Sound settings
       sound:
         enabled: true
-        # Sound type (see: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html)
         type: "ENTITY_PLAYER_LEVELUP"
         volume: 1.0
         pitch: 1.0
-
-    # Night transition announcement (when normal time starts)
     night:
       enabled: true
-      # Sound settings
       sound:
         enabled: true
         type: "BLOCK_NOTE_BLOCK_BELL"
         volume: 1.0
         pitch: 1.2
+
+# ============================================================
+# EVENT CRATES
+# ============================================================
+crate:
+  # Seconds before an unclaimed crate disappears.
+  lifetime-seconds: 120
+
+  # Base64 player-head texture for the crate block.
+  # Find textures at: https://minecraft-heads.com/
+  texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmYwMDk5MWFlNzljYWMzNGUzNTgzNTdjMTNkYjY5Y2E2ZmVkODJiOGE1OWE5MjE4OWYzZmU0ZmRiMmU0ZTU4OSJ9fX0="
+
+  # 24-hour times at which crates auto-spawn.
+  spawn-times:
+    - "20:00"
+    - "23:15"
+
+  # Number of crates spawned per auto-spawn trigger.
+  amount: 3
+
+  # ---- Spawn Region ----
+  # Worlds and coordinate bounds for random crate placement.
+  region:
+    world:
+      - world
+    min-x: -500
+    max-x: 500
+    min-z: -500
+    max-z: 500
+    # Crates only spawn between these Y levels.
+    min-y: 60
+    max-y: 256
+
+  # ---- Rewards ----
+  # Format: CHANCE%|TYPE:DATA
+  #   command:  console command (%player% = claimer's name)
+  #   item:     MATERIAL:AMOUNT
+  rewards:
+    - "100%|item:BREAD:3"
+    - "50%|item:DIAMOND:1"
+    - "10%|item:GOLD_INGOT:5"
+    - "5%|command:give %player% netherite_ingot 1"
+
+  # ---- Crate Messages ----
+  messages:
+    # Sent to all online players when auto-spawn fires.  %world% = world name list.
+    auto-spawn-broadcast: "&aEvent Box has spawned in &b%world%&a!"
+    # Sent when a crate is spawned manually.  %location% = "world x y z".
+    manual-spawn-broadcast: "&aCrate spawned at %location%!"
+    # Broadcast when a player claims a crate.  %player% = claimer name.
+    claimed-broadcast: "&b%player% &7claimed the event box!"
+    # Half-lifetime warnings.
+    half-auto:    "&6The auto box disappears in &e%seconds%s!"
+    half-manual:  "&6The box disappears in &e%seconds%s!"
+    # Expiry notices.
+    expired-auto:   "&cThe auto box disappeared unclaimed!"
+    expired-manual: "&cThe box disappeared unclaimed!"
+
+# ============================================================
+# REGION WAND  (/ramadhanwand)
+# Sets the bounding box for random crate spawning.
+# ============================================================
+wand-item:
+  material: GOLDEN_AXE
+  name: "&b&lRamadhan Region Wand"
+  lore:
+    - "&7Left-Click  &8» &aSet Position 1"
+    - "&7Right-Click &8» &cSet Position 2"
+    - ""
+    - "&eRun &b/ramadhanwand save &eto save the region."
