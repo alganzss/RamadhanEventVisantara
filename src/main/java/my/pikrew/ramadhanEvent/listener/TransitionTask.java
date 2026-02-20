@@ -28,6 +28,11 @@ public class TransitionTask extends BukkitRunnable {
         if (current == lastPeriod) return;
 
         lastPeriod = current;
+
+        if (plugin.getSpawnRateManager() != null) {
+            plugin.getSpawnRateManager().syncPhase();
+        }
+
         plugin.getSpawnRateManager().syncPhase();
 
         if (plugin.getConfig().getBoolean("debug", false)) {

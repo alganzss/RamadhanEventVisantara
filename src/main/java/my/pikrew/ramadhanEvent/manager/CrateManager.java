@@ -60,16 +60,33 @@ public class CrateManager {
         CrateData data = activeCrates.get(crateId);
         if (data == null) return;
 
+        boolean wasAuto = data.isAutoSpawn();
+
         handleRewards(player);
 
-        if (!data.isAutoSpawn()) {
-            broadcastList("crate.claimed-broadcast", "%player%", player.getName());
-        }
+        broadcastList("crate.claimed-broadcast", "%player%", player.getName());
 
         data.cancel();
         activeCrates.remove(crateId);
         if (data.getLocation().getBlock().getType() == Material.PLAYER_HEAD) {
             data.getLocation().getBlock().setType(Material.AIR);
+        }
+
+        if (wasAuto) {
+            checkAutoSpawnComplete(true);
+        }
+    }
+
+    private void checkAutoSpawnComplete(boolean wasClaimed) {
+        boolean anyAutoLeft = activeCrates.values().stream()
+                .anyMatch(CrateData::isAutoSpawn);
+
+        if (!anyAutoLeft) {
+            if (wasClaimed) {
+                broadcastList("crate.all-auto-claimed", "", "");
+            } else {
+                broadcastList("crate.all-auto-expired", "", "");
+            }
         }
     }
 
@@ -367,29 +384,26 @@ public class CrateManager {
     // ---------------------------------------------------------------
     // Broadcast via MessageUtil (supports list format)
     // ---------------------------------------------------------------
-
-    /**
-     * Broadcasts a message path from messages.yml.
-     * If the path is a list, each entry is sent with a 1-tick stagger.
-     * A single placeholder pair (token → replacement) is applied to every line.
-     */
     private void broadcastList(String path, String token, String replacement) {
         List<String> lines = plugin.getMessageUtil().getMessageList(path);
+
         if (!lines.isEmpty()) {
-            // List format
             for (int i = 0; i < lines.size(); i++) {
-                final String line = lines.get(i).replace(token, replacement);
+                final String line = token.isEmpty()
+                        ? lines.get(i)
+                        : lines.get(i).replace(token, replacement);
                 if (i == 0) {
                     Bukkit.broadcastMessage(line);
                 } else {
                     final int delay = i;
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> Bukkit.broadcastMessage(line), delay);
+                    Bukkit.getScheduler().runTaskLater(plugin,
+                            () -> Bukkit.broadcastMessage(line), delay);
                 }
             }
         } else {
-            // Single string fallback
-            String single = plugin.getMessageUtil().getMessage(path).replace(token, replacement);
+            String single = plugin.getMessageUtil().getMessage(path);
             if (!single.startsWith("Message not found")) {
+                if (!token.isEmpty()) single = single.replace(token, replacement);
                 Bukkit.broadcastMessage(single);
             }
         }
@@ -449,6 +463,10 @@ public class CrateManager {
                         }
                         cancel();
                         activeCrates.remove(id);
+
+                        if (autoSpawn) {
+                            checkAutoSpawnComplete(false);
+                        }
                     }
                 }
             };

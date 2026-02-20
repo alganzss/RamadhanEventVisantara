@@ -28,8 +28,11 @@ public final class RamadhanEvent extends JavaPlugin {
         // Core managers
         messageUtil    = new MessageUtil(this);
         timeManager    = new TimeManager(this);
+        spawnRateManager = new SpawnRateManager(this, timeManager);
         displayManager = new DisplayManager(this, messageUtil, timeManager);
         crateManager   = new CrateManager(this);
+
+        spawnRateManager.start();
 
         regionWandListener = new RegionWandListener(this);
         getServer().getPluginManager().registerEvents(new HungerListener(this, timeManager), this);

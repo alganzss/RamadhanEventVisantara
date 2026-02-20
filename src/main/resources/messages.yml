@@ -135,10 +135,16 @@ crate:
     - ""
 
   # Broadcast when a crate is spawned manually. %location% = "world x y z".
-  manual-spawn-broadcast: "&aCrate spawned at &f%location%&a!"
+  manual-spawn-broadcast:
+    - ""
+    - "&aCrate spawned at &f%location%&a!"
+    - ""
 
   # Broadcast when a player claims a crate. %player% = claimer name.
-  claimed-broadcast: "&b%player% &7claimed the event box!"
+  claimed-broadcast:
+    - ""
+    - "&b%player% &7claimed the event box! &6✦"
+    - ""
 
   # Half-lifetime warnings. %seconds% = seconds remaining.
   half-auto:
@@ -151,6 +157,22 @@ crate:
     - "&c✗ The auto event box disappeared unclaimed!"
   expired-manual:
     - "&c✗ The box disappeared unclaimed!"
+
+  # Broadcast ketika SEMUA auto-spawn crate sudah di-claim habis.
+  all-auto-claimed:
+    - ""
+    - "&a&l✦ All Event Boxes Have Been Claimed! &a&l✦"
+    - "&7All &6auto event boxes &7have been claimed."
+    - "&7See you at the next event!"
+    - ""
+
+  # Broadcast ketika SEMUA auto-spawn crate expired tanpa ada yang claim.
+  all-auto-expired:
+    - ""
+    - "&c&l✗ All Event Boxes Expired! &c&l✗"
+    - "&7No one claimed the &6auto event boxes&7 in time."
+    - "&7Better luck next time!"
+    - ""
 
   # Status strings returned by CrateManager (used in /ramadhan debug & box status).
   status:
