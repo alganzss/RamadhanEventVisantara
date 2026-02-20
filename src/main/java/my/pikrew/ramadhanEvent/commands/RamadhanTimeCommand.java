@@ -1,6 +1,7 @@
 package my.pikrew.ramadhanEvent.commands;
 
 import my.pikrew.ramadhanEvent.RamadhanEvent;
+import my.pikrew.ramadhanEvent.manager.SpawnRateManager;
 import my.pikrew.ramadhanEvent.util.MessageUtil;
 import my.pikrew.ramadhanEvent.manager.TimeManager;
 import org.bukkit.command.Command;
@@ -18,6 +19,7 @@ public class RamadhanTimeCommand implements CommandExecutor, TabCompleter {
     private final RamadhanEvent plugin;
     private final MessageUtil messageUtil;
     private final TimeManager timeManager;
+    private SpawnRateManager spawnRateManager;
 
     private static final List<String> SUB_COMMANDS = Arrays.asList("reload", "debug");
 
@@ -79,6 +81,25 @@ public class RamadhanTimeCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage("§6=== Display Settings ===");
                 sender.sendMessage("§eAction Bar: §f" + plugin.getConfig().getBoolean("displays.action-bar.enabled"));
                 sender.sendMessage("§eBoss Bar: §f" + plugin.getConfig().getBoolean("displays.boss-bar.enabled"));
+            }
+            case "spawnstatus" -> {
+                if (!sender.hasPermission("ramadhan.spawn")) {
+                    sender.sendMessage(messageUtil.getMessage("commands.no-permission"));
+                    return true;
+                }
+                sender.sendMessage("§6=== Ghost Spawn Status ===");
+                sender.sendMessage("§eNight Surge Active: §f" + spawnRateManager.isNightSurgeActive());
+                spawnRateManager.getSpawnDataMap().values().forEach(data ->
+                        sender.sendMessage("§e" + data.getMobKey() + " §7| Chance: §f" + data.getCurrentChance()
+                                + " §7| Level: §f" + data.getCurrentMinLevel() + "-" + data.getCurrentMaxLevel()));
+            }
+            case "spawnrefresh" -> {
+                if (!sender.hasPermission("ramadhan.spawn")) {
+                    sender.sendMessage(messageUtil.getMessage("commands.no-permission"));
+                    return true;
+                }
+                spawnRateManager.forceRefresh();
+                sender.sendMessage("§aGhost spawn rates refreshed.");
             }
 
             default -> sender.sendMessage(messageUtil.getMessage("commands.help"));

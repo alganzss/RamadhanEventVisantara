@@ -11,7 +11,7 @@ commands:
 
   ramadhanbox:
     description: Event crate admin command.
-    usage: /ramadhanbox <spawn|spawnauto|remove|status|reload|help>
+    usage: /ramadhanbox <spawn|spawnauto|remove|status|reload|help|spawnstatus|spawnrefresh>
     aliases: [rbox, ramadanbox]
 
   ramadhanwand:
@@ -27,6 +27,9 @@ permissions:
     default: op
   ramadhan.debug:
     description: View debug information.
+    default: op
+  ramadhan.spawn:
+    description: Allows viewing and managing ghost spawn rates
     default: op
 
   # --- Crate admin ---

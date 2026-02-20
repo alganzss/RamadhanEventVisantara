@@ -3,10 +3,7 @@ package my.pikrew.ramadhanEvent;
 import my.pikrew.ramadhanEvent.commands.CrateCommand;
 import my.pikrew.ramadhanEvent.commands.RamadhanTimeCommand;
 import my.pikrew.ramadhanEvent.commands.RegionWandCommand;
-import my.pikrew.ramadhanEvent.listener.HungerListener;
-import my.pikrew.ramadhanEvent.listener.MobDeathListener;
-import my.pikrew.ramadhanEvent.listener.RegionWandListener;
-import my.pikrew.ramadhanEvent.listener.TransitionTask;
+import my.pikrew.ramadhanEvent.listener.*;
 import my.pikrew.ramadhanEvent.manager.CrateManager;
 import my.pikrew.ramadhanEvent.manager.DisplayManager;
 import my.pikrew.ramadhanEvent.manager.SpawnRateManager;
@@ -32,30 +29,49 @@ public final class RamadhanEvent extends JavaPlugin {
         saveDefaultConfig();
         saveResource("messages.yml", false);
 
-        timeManager = new TimeManager(this);
-        messageUtil = new MessageUtil(this);
+        // Core managers
+        messageUtil  = new MessageUtil(this);
+        timeManager  = new TimeManager(this);
         displayManager = new DisplayManager(this, messageUtil, timeManager);
-        spawnRateManager = new SpawnRateManager(this, timeManager);
-        hungerListener = new HungerListener(this, timeManager);
+        crateManager = new CrateManager(this);
 
-        getServer().getPluginManager().registerEvents(hungerListener, this);
-        getServer().getPluginManager().registerEvents(new MobDeathListener(this), this);
+        regionWandListener = new RegionWandListener(this);
+        getServer().getPluginManager().registerEvents(new HungerListener(this, timeManager), this);
+        getServer().getPluginManager().registerEvents(new InteractListener(this), this);
+        getServer().getPluginManager().registerEvents(regionWandListener, this);
 
         transitionTask = new TransitionTask(this, timeManager, messageUtil);
         transitionTask.runTaskTimer(this, 0L, 20L);
         displayManager.start();
-        spawnRateManager.start();
+        crateManager.startAutoSpawnTask();
 
-        getLogger().info("RamadhanEvent enabled! | Period: " + timeManager.getCurrentPeriod().name()
-                + " | Time: " + timeManager.getCurrentTimeString());
-    }
+        RamadhanTimeCommand ramadhanCmd = new RamadhanTimeCommand(this);
+        getCommand("ramadhan").setExecutor(ramadhanCmd);
+        getCommand("ramadhan").setTabCompleter(ramadhanCmd);
 
-    @Override
-    public void onDisable() {
-        if (transitionTask != null) transitionTask.cancel();
-        if (displayManager != null) displayManager.stop();
-        if (spawnRateManager != null) spawnRateManager.stop();
-        getLogger().info("RamadhanEvent disabled.");
+        CrateCommand crateCmd = new CrateCommand(this);
+        getCommand("ramadhanbox").setExecutor(crateCmd);
+        getCommand("ramadhanbox").setTabCompleter(crateCmd);
+
+        RegionWandCommand wandCmd = new RegionWandCommand(this, regionWandListener);
+        getCommand("ramadhanwand").setExecutor(wandCmd);
+        getCommand("ramadhanwand").setTabCompleter(wandCmd);
+
+        if (getConfig().getBoolean("debug", false)) {
+            getLogger().info("=== DEBUG MODE ENABLED ===");
+            getLogger().info("Day time: "  + getConfig().getString("times.day"));
+            getLogger().info("Night time: " + getConfig().getString("times.night"));
+            getLogger().info("Timezone: "  + getConfig().getString("timezone"));
+            getLogger().info("Hunger Loss Multiplier: "    + getConfig().getDouble("ramadhan-time.hunger-loss-multiplier"));
+            getLogger().info("Food Consumption Multiplier: " + getConfig().getDouble("ramadhan-time.food-consumption-multiplier"));
+            getLogger().info("Crate spawn-times: " + getConfig().getStringList("crate.spawn-times"));
+        }
+
+        getLogger().info("RamadhanEvent enabled! Day: " + getConfig().getString("times.day")
+                + " | Night: " + getConfig().getString("times.night")
+                + " (" + getConfig().getString("timezone") + ")");
+        getLogger().info("Current period: " + timeManager.getCurrentPeriod().name()
+                + " (" + (timeManager.isRamadhanTime() ? "ramadhan" : "vanilla") + ")");
     }
 
     public TimeManager getTimeManager() {
