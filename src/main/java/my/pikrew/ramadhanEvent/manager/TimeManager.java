@@ -1,25 +1,24 @@
 package my.pikrew.ramadhanEvent.manager;
 
 import my.pikrew.ramadhanEvent.RamadhanEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 public class TimeManager {
-    private final JavaPlugin plugin;
-    private LocalTime dayStartTime;
-    private LocalTime nightStartTime;
-    private ZoneId timezone;
-    private boolean debugMode;
 
     public enum TimePeriod {
         DAY,
         NIGHT
     }
 
-    public TimeManager(JavaPlugin plugin) {
+    private final RamadhanEvent plugin;
+    private LocalTime dayStartTime;
+    private LocalTime nightStartTime;
+    private ZoneId timezone;
+
+    public TimeManager(RamadhanEvent plugin) {
         this.plugin = plugin;
         reload();
     }
@@ -27,41 +26,34 @@ public class TimeManager {
     public void reload() {
         String timezoneStr = plugin.getConfig().getString("timezone", "GMT+07:00");
         try {
-            timezone = ZoneId.of(timezoneStr.replace("GMT", "GMT"));
+            timezone = ZoneId.of(timezoneStr);
         } catch (Exception e) {
-            plugin.getLogger().warning("Invalid timezone: " + timezoneStr + ", using system default");
+            plugin.getLogger().warning("Invalid timezone: " + timezoneStr + ", falling back to system default.");
             timezone = ZoneId.systemDefault();
         }
 
         dayStartTime = parseTime(plugin.getConfig().getString("times.day", "8:00"));
         nightStartTime = parseTime(plugin.getConfig().getString("times.night", "18:00"));
 
-        debugMode = plugin.getConfig().getBoolean("debug", false);
-
-        if (debugMode) {
-            plugin.getLogger().info("[DEBUG] TimeManager reloaded:");
-            plugin.getLogger().info("[DEBUG] Day start: " + dayStartTime);
-            plugin.getLogger().info("[DEBUG] Night start: " + nightStartTime);
-            plugin.getLogger().info("[DEBUG] Timezone: " + timezone);
-            plugin.getLogger().info("[DEBUG] Current time: " + getCurrentTimeString());
+        if (plugin.getConfig().getBoolean("debug", false)) {
+            plugin.getLogger().info("[Debug] TimeManager reloaded | Day: " + dayStartTime
+                    + " | Night: " + nightStartTime + " | Zone: " + timezone);
         }
     }
 
-    private LocalTime parseTime(String timeStr) {
+    private LocalTime parseTime(String raw) {
         try {
-            String[] parts = timeStr.split(":");
+            String[] parts = raw.split(":");
             int hour = Integer.parseInt(parts[0].trim());
             int minute = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 0;
-
             if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-                plugin.getLogger().warning("Invalid time: " + timeStr + ", using 0:00");
-                return LocalTime.of(0, 0);
+                plugin.getLogger().warning("Invalid time value: " + raw + ", using 00:00.");
+                return LocalTime.MIDNIGHT;
             }
-
             return LocalTime.of(hour, minute);
         } catch (Exception e) {
-            plugin.getLogger().warning("Failed to parse time: " + timeStr + ", using 0:00");
-            return LocalTime.of(0, 0);
+            plugin.getLogger().warning("Failed to parse time: " + raw + ", using 00:00.");
+            return LocalTime.MIDNIGHT;
         }
     }
 
@@ -76,37 +68,24 @@ public class TimeManager {
 
     public TimePeriod getCurrentPeriod() {
         LocalTime now = getCurrentTime();
-
-        if (debugMode) {
-            plugin.getLogger().info("[DEBUG] Checking period - Current: " + now +
-                    ", Day start: " + dayStartTime +
-                    ", Night start: " + nightStartTime);
-        }
-
         if (dayStartTime.isBefore(nightStartTime)) {
-            boolean isDayPeriod = !now.isBefore(dayStartTime) && now.isBefore(nightStartTime);
-            if (debugMode) {
-                plugin.getLogger().info("[DEBUG] Normal case - Is day period: " + isDayPeriod);
-            }
-            return isDayPeriod ? TimePeriod.DAY : TimePeriod.NIGHT;
+            boolean isDay = !now.isBefore(dayStartTime) && now.isBefore(nightStartTime);
+            return isDay ? TimePeriod.DAY : TimePeriod.NIGHT;
         }
-        else {
-            boolean isNightPeriod = !now.isBefore(nightStartTime) && now.isBefore(dayStartTime);
-            if (debugMode) {
-                plugin.getLogger().info("[DEBUG] Overnight case - Is night period: " + isNightPeriod);
-            }
-            return isNightPeriod ? TimePeriod.NIGHT : TimePeriod.DAY;
-        }
+        boolean isNight = !now.isBefore(nightStartTime) || now.isBefore(dayStartTime);
+        return isNight ? TimePeriod.NIGHT : TimePeriod.DAY;
     }
 
     public boolean isRamadhanTime() {
         return getCurrentPeriod() == TimePeriod.DAY;
     }
 
-    public String getTimeRangeString() {
-        return String.format("%02d:%02d - %02d:%02d",
-                dayStartTime.getHour(), dayStartTime.getMinute(),
-                nightStartTime.getHour(), nightStartTime.getMinute());
+    public boolean isNightSurge() {
+        return getCurrentPeriod() == TimePeriod.NIGHT;
+    }
+
+    public ZoneId getTimezone() {
+        return timezone;
     }
 
     public LocalTime getDayStartTime() {
@@ -117,7 +96,9 @@ public class TimeManager {
         return nightStartTime;
     }
 
-    public ZoneId getTimezone() {
-        return timezone;
+    public String getTimeRangeString() {
+        return String.format("%02d:%02d - %02d:%02d",
+                dayStartTime.getHour(), dayStartTime.getMinute(),
+                nightStartTime.getHour(), nightStartTime.getMinute());
     }
 }
