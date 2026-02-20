@@ -82,11 +82,13 @@ public class CrateManager {
                 .anyMatch(CrateData::isAutoSpawn);
 
         if (!anyAutoLeft) {
-            if (wasClaimed) {
-                broadcastList("crate.all-auto-claimed", "", "");
-            } else {
-                broadcastList("crate.all-auto-expired", "", "");
-            }
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (wasClaimed) {
+                    broadcastList("crate.all-auto-claimed", "", "");
+                } else {
+                    broadcastList("crate.all-auto-expired", "", "");
+                }
+            }, 20L);
         }
     }
 
