@@ -1,8 +1,12 @@
 package my.pikrew.ramadhanEvent;
 
+import my.pikrew.ramadhanEvent.commands.CrateCommand;
+import my.pikrew.ramadhanEvent.commands.RamadhanTimeCommand;
+import my.pikrew.ramadhanEvent.commands.RegionWandCommand;
 import my.pikrew.ramadhanEvent.listener.HungerListener;
 import my.pikrew.ramadhanEvent.listener.MobDeathListener;
 import my.pikrew.ramadhanEvent.listener.TransitionTask;
+import my.pikrew.ramadhanEvent.manager.CrateManager;
 import my.pikrew.ramadhanEvent.manager.DisplayManager;
 import my.pikrew.ramadhanEvent.manager.SpawnRateManager;
 import my.pikrew.ramadhanEvent.manager.TimeManager;
@@ -19,6 +23,8 @@ public final class RamadhanEvent extends JavaPlugin {
     private SpawnRateManager spawnRateManager;
     private HungerListener hungerListener;
     private TransitionTask transitionTask;
+    private CrateManager crateManager;
+    private RegionWandListener regionWandListener;
 
     @Override
     public void onEnable() {
@@ -36,7 +42,6 @@ public final class RamadhanEvent extends JavaPlugin {
 
         transitionTask = new TransitionTask(this, timeManager, messageUtil);
         transitionTask.runTaskTimer(this, 0L, 20L);
-
         displayManager.start();
         spawnRateManager.start();
 
