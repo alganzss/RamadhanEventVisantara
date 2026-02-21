@@ -8,28 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * Central authority for ghost mob spawn configuration at runtime.
- *
- * <p>Reads each tracked mob's day/night chances and level ranges from config.yml on
- * startup (and on reload), then exposes two points of integration:
- * <ul>
- *   <li>{@link #shouldAllowSpawn(String)} – called by the passive gate listener to
- *       decide whether a MythicMobs-triggered spawn should proceed.</li>
- *   <li>{@link MobSpawnData} values, consumed directly by {@link GhostSpawnManager}
- *       for the plugin's own active spawn cycle.</li>
- * </ul>
- * </p>
- *
- * <p>Both consumers share the same {@link MobSpawnData} instances, so the phase-aware
- * spawn counters ({@link MobSpawnData#getDaySpawnCount()},
- * {@link MobSpawnData#getNightSpawnCount()}) accumulate regardless of which path
- * produced the spawn. That means the test/report command always shows a unified total.</p>
- *
- * <p>{@link #simulateSpawnCheck(String, boolean, int)} performs a statistical dry-run —
- * it rolls the configured chance {@code n} times and returns the success count, letting
- * admins verify their config produces the expected rate without waiting for live spawns.</p>
- */
 public class SpawnRateManager {
 
     private final RamadhanEvent plugin;
@@ -100,13 +78,6 @@ public class SpawnRateManager {
         spawnDataMap.values().forEach(d -> d.applyPhase(nightSurgeActive));
     }
 
-    /**
-     * Evaluates a single spawn gate roll for the given mob type.
-     * Records the spawn in the phase counter when the roll succeeds.
-     *
-     * @return {@code true} if the spawn should proceed, {@code false} to cancel it.
-     *         Unknown mob keys always return {@code true} (not our responsibility).
-     */
     public boolean shouldAllowSpawn(String mobKey) {
         MobSpawnData data = spawnDataMap.get(mobKey);
         if (data == null) return true;
@@ -123,15 +94,6 @@ public class SpawnRateManager {
         return allowed;
     }
 
-    /**
-     * Runs a statistical simulation of spawn rolls for reporting purposes.
-     * Does not spawn anything or mutate any state.
-     *
-     * @param mobKey        the MythicMobs internal name
-     * @param simulateNight {@code true} to use night-phase chance, {@code false} for day
-     * @param trials        number of rolls to run, clamped to [1, 10000]
-     * @return number of successful rolls, or -1 if the mob key is not tracked
-     */
     public int simulateSpawnCheck(String mobKey, boolean simulateNight, int trials) {
         MobSpawnData data = spawnDataMap.get(mobKey);
         if (data == null) return -1;

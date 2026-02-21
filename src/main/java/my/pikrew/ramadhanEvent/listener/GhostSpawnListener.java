@@ -12,15 +12,6 @@ import org.bukkit.event.Listener;
 
 import java.util.UUID;
 
-/**
- * Passive chance gate untuk spawn yang diinisiasi MythicMobs sendiri
- * (natural spawners, /mm m spawn, skill spawns, dsb.).
- *
- * <p>BUG #3 FIX: Spawn yang berasal dari {@link my.pikrew.ramadhanEvent.manager.GhostSpawnManager}
- * kita sendiri ditandai di {@code managedSpawns} set. Listener ini akan melewati
- * chance-gate untuk UUID tersebut agar tidak terjadi double-gate yang menyebabkan
- * mob plugin kita sendiri di-cancel setelah sudah lolos roll pertama.</p>
- */
 public class GhostSpawnListener implements Listener {
 
     private final RamadhanEvent plugin;
@@ -34,26 +25,32 @@ public class GhostSpawnListener implements Listener {
         String           mobKey = event.getMobType().getInternalName();
         SpawnRateManager srm    = plugin.getSpawnRateManager();
 
-        // Bukan mob yang kita track — biarkan lewat
         if (!srm.getSpawnDataMap().containsKey(mobKey)) return;
 
-        // BUG #3 FIX: Cek apakah entity ini di-spawn oleh GhostSpawnManager kita.
-        // Jika ya, skip gate — chance sudah dievaluasi di manager, jangan di-cancel.
         Entity spawned = event.getEntity();
+
         if (spawned != null && plugin.getGhostSpawnManager() != null) {
             UUID id = spawned.getUniqueId();
             if (plugin.getGhostSpawnManager().getManagedSpawns().contains(id)) {
-                // Spawn dari manager kita — langsung register tanpa chance-roll ulang
                 if (plugin.getConfig().getBoolean("debug", false)) {
-                    plugin.getLogger().info("[Debug] Managed spawn bypass for: " + mobKey + " " + id);
+                    plugin.getLogger().info("[Debug] GhostSpawnManager bypass: " + mobKey + " " + id);
                 }
                 return;
             }
         }
 
-        // Spawn dari luar (MythicMobs natural/manual) — lakukan chance-gate normal
+        if (spawned != null && plugin.getNetherSpawnManager() != null) {
+            UUID id = spawned.getUniqueId();
+            if (plugin.getNetherSpawnManager().getManagedSpawns().contains(id)) {
+                if (plugin.getConfig().getBoolean("debug", false)) {
+                    plugin.getLogger().info("[Debug] NetherSpawnManager bypass: " + mobKey + " " + id);
+                }
+                return;
+            }
+        }
+
         if (plugin.getConfig().getBoolean("debug", false)) {
-            plugin.getLogger().info("[Debug] Gate check: '" + mobKey + "' entity="
+            plugin.getLogger().info("[Debug] External gate check: '" + mobKey + "' entity="
                     + (spawned != null ? spawned.getUniqueId() : "null"));
         }
 
@@ -71,7 +68,8 @@ public class GhostSpawnListener implements Listener {
 
             if (plugin.getConfig().getBoolean("debug", false)) {
                 Location loc = spawned.getLocation();
-                plugin.getLogger().info("[Debug] Registered " + mobKey + " " + spawned.getUniqueId()
+                plugin.getLogger().info("[Debug] Registered external spawn: " + mobKey
+                        + " " + spawned.getUniqueId()
                         + " @ " + loc.getBlockX() + " " + loc.getBlockY() + " " + loc.getBlockZ());
             }
         }, 1L);

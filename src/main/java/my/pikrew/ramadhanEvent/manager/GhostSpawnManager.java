@@ -24,11 +24,6 @@ public class GhostSpawnManager {
     private final SpawnRateManager spawnRateManager;
     private final Random           rng = new Random();
 
-    /**
-     * BUG #3 FIX: Set UUID entity yang di-spawn oleh manager kita sendiri.
-     * GhostSpawnListener akan skip chance-gate untuk UUID yang ada di sini,
-     * mencegah double-gate yang menyebabkan mob kita sendiri di-cancel.
-     */
     private final Set<UUID> managedSpawns = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private BukkitTask task;
@@ -96,18 +91,13 @@ public class GhostSpawnManager {
                 return;
             }
 
-            // BUG #3 FIX: Tandai entity ini sebagai "sudah lolos gate" agar
-            // GhostSpawnListener tidak melakukan chance-roll kedua dan membatalkannya.
             Entity entity = extractEntity(activeMob);
             if (entity != null) {
                 UUID id = entity.getUniqueId();
                 managedSpawns.add(id);
 
-                // BUG #2 FIX: Daftarkan ke MobTracker agar live-count akurat.
-                // Delay 1 tick sama seperti GhostSpawnListener untuk memastikan
-                // entity sudah fully initialized di dunia.
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    managedSpawns.remove(id); // bersihkan flag setelah event terlewati
+                    managedSpawns.remove(id);
                     if (entity.isValid() && !entity.isDead()) {
                         spawnRateManager.getMobTracker().register(data.getMobKey(), entity);
                     }

@@ -48,10 +48,6 @@ public class RamadhanCommand implements CommandExecutor, TabCompleter {
         this.regionWandListener = regionWandListener;
     }
 
-    // ---------------------------------------------------------------
-    // onCommand
-    // ---------------------------------------------------------------
-
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
@@ -68,10 +64,6 @@ public class RamadhanCommand implements CommandExecutor, TabCompleter {
         }
         return true;
     }
-
-    // ---------------------------------------------------------------
-    // /ramadhan reload
-    // ---------------------------------------------------------------
 
     private void handleReload(CommandSender sender) {
         if (!sender.hasPermission("ramadhan.reload")) {
@@ -135,10 +127,6 @@ public class RamadhanCommand implements CommandExecutor, TabCompleter {
             }
         }
     }
-
-    // ---------------------------------------------------------------
-    // /ramadhan box <sub>
-    // ---------------------------------------------------------------
 
     private void handleBox(CommandSender sender, String label, String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
@@ -219,10 +207,6 @@ public class RamadhanCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(line.replace("{label}", label));
         }
     }
-
-    // ---------------------------------------------------------------
-    // /ramadhan wand <sub>
-    // ---------------------------------------------------------------
 
     private void handleWand(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -334,19 +318,11 @@ public class RamadhanCommand implements CommandExecutor, TabCompleter {
         return wand;
     }
 
-    // ---------------------------------------------------------------
-    // /ramadhan help
-    // ---------------------------------------------------------------
-
     private void sendHelp(CommandSender sender) {
         for (String line : plugin.getMessageUtil().getMessageList("commands.help")) {
             sender.sendMessage(line);
         }
     }
-
-    // ---------------------------------------------------------------
-    // Clickable TP helper
-    // ---------------------------------------------------------------
 
     private void sendClickableTp(Player player, Location loc) {
         int x = loc.getBlockX(), y = loc.getBlockY(), z = loc.getBlockZ();
@@ -375,17 +351,9 @@ public class RamadhanCommand implements CommandExecutor, TabCompleter {
         player.spigot().sendMessage(msg);
     }
 
-    // ---------------------------------------------------------------
-    // Utility
-    // ---------------------------------------------------------------
-
     private void send(CommandSender sender, String msg) {
         sender.sendMessage(msg);
     }
-
-    // ---------------------------------------------------------------
-    // Tab Completer
-    // ---------------------------------------------------------------
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {

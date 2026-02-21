@@ -1,5 +1,6 @@
 package my.pikrew.ramadhanEvent;
 
+import my.pikrew.ramadhanEvent.commands.NetherSpawnTestCommand;
 import my.pikrew.ramadhanEvent.commands.RamadhanCommand;
 import my.pikrew.ramadhanEvent.commands.RamadhanIntegrationMobsCommand;
 import my.pikrew.ramadhanEvent.listener.*;
@@ -14,6 +15,7 @@ public final class RamadhanEvent extends JavaPlugin {
     private DisplayManager     displayManager;
     private SpawnRateManager   spawnRateManager;
     private GhostSpawnManager  ghostSpawnManager;
+    private NetherSpawnManager netherSpawnManager;
     private CrateManager       crateManager;
     private RegionWandListener regionWandListener;
 
@@ -28,8 +30,6 @@ public final class RamadhanEvent extends JavaPlugin {
         displayManager   = new DisplayManager(this, messageUtil, timeManager);
         crateManager     = new CrateManager(this);
 
-        // BUG #1 FIX: start() harus dipanggil agar spawnDataMap terisi
-        // sebelum GhostSpawnManager dan GhostSpawnListener mulai bekerja.
         spawnRateManager.start();
 
         regionWandListener = new RegionWandListener(this);
@@ -39,18 +39,22 @@ public final class RamadhanEvent extends JavaPlugin {
         getServer().getPluginManager().registerEvents(regionWandListener, this);
 
         if (getServer().getPluginManager().getPlugin("MythicMobs") != null) {
-            // BUG #3 FIX: GhostSpawnListener sekarang mengetahui spawn mana
-            // yang berasal dari GhostSpawnManager (via flag) agar tidak
-            // double-gate spawn yang sudah lolos dari manager kita sendiri.
             getServer().getPluginManager().registerEvents(new GhostSpawnListener(this), this);
             getServer().getPluginManager().registerEvents(new MobDeathListener(this), this);
 
             ghostSpawnManager = new GhostSpawnManager(this, spawnRateManager);
             ghostSpawnManager.start();
 
-            getLogger().info("MythicMobs found — ghost spawn integration active.");
+            netherSpawnManager = new NetherSpawnManager(this, spawnRateManager);
+            netherSpawnManager.start();
+
+            NetherSpawnTestCommand netherTestCmd = new NetherSpawnTestCommand(this);
+            getCommand("netherspawntest").setExecutor(netherTestCmd);
+            getCommand("netherspawntest").setTabCompleter(netherTestCmd);
+
+            getLogger().info("MythicMobs found — ghost & nether spawn integration active.");
         } else {
-            getLogger().warning("MythicMobs not found — ghost spawn integration disabled.");
+            getLogger().warning("MythicMobs not found — ghost/nether spawn integration disabled.");
         }
 
         TransitionTask transition = new TransitionTask(this, timeManager, messageUtil);
@@ -79,16 +83,18 @@ public final class RamadhanEvent extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (ghostSpawnManager != null) ghostSpawnManager.stop();
-        if (displayManager    != null) displayManager.stop();
-        if (crateManager      != null) crateManager.cleanupAll();
+        if (ghostSpawnManager  != null) ghostSpawnManager.stop();
+        if (netherSpawnManager != null) netherSpawnManager.stop();  // FIX: stop saat disable
+        if (displayManager     != null) displayManager.stop();
+        if (crateManager       != null) crateManager.cleanupAll();
         getLogger().info("RamadhanEvent disabled.");
     }
 
-    public TimeManager       getTimeManager()       { return timeManager; }
-    public MessageUtil       getMessageUtil()        { return messageUtil; }
-    public SpawnRateManager  getSpawnRateManager()  { return spawnRateManager; }
-    public GhostSpawnManager getGhostSpawnManager() { return ghostSpawnManager; }
-    public DisplayManager    getDisplayManager()    { return displayManager; }
-    public CrateManager      getCrateManager()      { return crateManager; }
+    public TimeManager        getTimeManager()        { return timeManager; }
+    public MessageUtil        getMessageUtil()         { return messageUtil; }
+    public SpawnRateManager   getSpawnRateManager()   { return spawnRateManager; }
+    public GhostSpawnManager  getGhostSpawnManager()  { return ghostSpawnManager; }
+    public NetherSpawnManager getNetherSpawnManager() { return netherSpawnManager; } // FIX: getter yang hilang
+    public DisplayManager     getDisplayManager()     { return displayManager; }
+    public CrateManager       getCrateManager()       { return crateManager; }
 }

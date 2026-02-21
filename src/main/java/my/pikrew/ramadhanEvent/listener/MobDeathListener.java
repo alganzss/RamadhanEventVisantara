@@ -9,14 +9,6 @@ import org.bukkit.event.Listener;
 
 import java.util.UUID;
 
-/**
- * Removes ghost mobs from {@link my.pikrew.ramadhanEvent.manager.MobTracker}
- * when they die or despawn, keeping the live count accurate.
- *
- * Also notifies {@link my.pikrew.ramadhanEvent.manager.NetherSpawnManager} to
- * release the force-loaded chunk that was locked when the mob spawned. Without
- * this, chunks accumulate as permanently force-loaded until server restart.
- */
 public class MobDeathListener implements Listener {
 
     private final RamadhanEvent plugin;

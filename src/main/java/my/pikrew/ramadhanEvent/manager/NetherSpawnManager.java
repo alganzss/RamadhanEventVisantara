@@ -22,28 +22,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-/**
- * Manages periodic mob spawning exclusively inside nether worlds.
- *
- * Unlike {@link GhostSpawnManager} which anchors spawns around online players,
- * this system runs on a fixed server tick schedule and selects spawn candidates
- * from pre-configured nether worlds. The spawner fires even when the server has
- * zero online players, making it suitable for populating persistent nether regions
- * that players may enter at any time.
- *
- * Chunk management:
- * Every chunk that receives a mob is force-loaded via {@link Chunk#setForceLoaded(boolean)}
- * so Minecraft does not unload it and despawn the mob. The chunk is released
- * automatically when the mob dies or despawns, signalled by {@link #releaseChunk(UUID)}.
- * Toggle with {@code nether-spawn.force-load-chunks} (default true).
- *
- * Bug fix (v1.1):
- * Previously, the success log and recordSpawn() were called before validating
- * whether spawnMob() actually returned a non-null ActiveMob. MythicMobs can
- * return null silently when spawn is denied or the mob key is invalid, causing
- * the plugin to report a successful spawn that never happened. Now the entity
- * is fully validated before any side effects are committed.
- */
 public class NetherSpawnManager {
 
     private final RamadhanEvent    plugin;
@@ -52,15 +30,18 @@ public class NetherSpawnManager {
 
     private BukkitTask task;
 
-    /**
-     * Maps entity UUID -> the chunk that was force-loaded for it.
-     * Released when the mob dies or despawns.
-     */
+    private final Set<UUID> managedSpawns = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
     private final Map<UUID, Chunk> forcedChunks = new ConcurrentHashMap<>();
 
     public NetherSpawnManager(RamadhanEvent plugin, SpawnRateManager spawnRateManager) {
         this.plugin           = plugin;
         this.spawnRateManager = spawnRateManager;
+    }
+
+    /** Diakses oleh GhostSpawnListener untuk bypass check. */
+    public Set<UUID> getManagedSpawns() {
+        return managedSpawns;
     }
 
     public void start() {
@@ -84,11 +65,6 @@ public class NetherSpawnManager {
         start();
     }
 
-    /**
-     * Called by {@link my.pikrew.ramadhanEvent.listener.MobDeathListener} when a
-     * tracked nether mob dies or despawns. Releases the force-load on its chunk so
-     * the server can manage it normally once no other mob still occupies that chunk.
-     */
     public void releaseChunk(UUID entityId) {
         Chunk chunk = forcedChunks.remove(entityId);
         if (chunk == null) return;
@@ -149,10 +125,6 @@ public class NetherSpawnManager {
                     .getMobManager()
                     .spawnMob(data.getMobKey(), loc, level);
 
-            // spawnMob() dapat return null tanpa throw exception ketika MythicMobs
-            // menolak spawn (denied region, mob key tidak ditemukan, dsb).
-            // Sebelumnya tidak ada null check di sini sehingga log sukses dan
-            // recordSpawn() tetap terpanggil padahal mob tidak benar-benar ada.
             if (activeMob == null) {
                 if (forceLoad) chunk.setForceLoaded(false);
                 plugin.getLogger().warning(
@@ -169,28 +141,43 @@ public class NetherSpawnManager {
             if (entity == null || !entity.isValid()) {
                 if (forceLoad) chunk.setForceLoaded(false);
                 plugin.getLogger().warning(
-                        "[NetherSpawn] Entity invalid after spawn for " + data.getMobKey()
-                                + " at " + loc.getBlockX() + " " + loc.getBlockY() + " " + loc.getBlockZ());
+                        "[NetherSpawn] Entity invalid after spawn for " + data.getMobKey());
                 return;
             }
 
-            // Semua validasi lolos — baru commit side effects
+            // FIX: Tandai UUID agar GhostSpawnListener tidak double-gate spawn ini.
+            // managedSpawns dibersihkan setelah 2 tick (setelah MythicMobSpawnEvent terlewati).
+            UUID id = entity.getUniqueId();
+            managedSpawns.add(id);
+
+            final Entity finalEntity = entity;
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                managedSpawns.remove(id);
+                // Register ke MobTracker setelah entity fully initialized
+                if (finalEntity.isValid() && !finalEntity.isDead()) {
+                    spawnRateManager.getMobTracker().register(data.getMobKey(), finalEntity);
+                }
+            }, 2L);
+
+            // Commit side effects setelah semua validasi lolos
             data.recordSpawn(isNight);
 
             if (forceLoad) {
-                forcedChunks.put(entity.getUniqueId(), chunk);
+                forcedChunks.put(id, chunk);
             }
 
-            plugin.getLogger().info(
-                    "[NetherSpawn] " + data.getMobKey()
-                            + " lv" + level
-                            + " -> " + loc.getWorld().getName()
-                            + " x=" + loc.getBlockX()
-                            + " y=" + loc.getBlockY()
-                            + " z=" + loc.getBlockZ()
-                            + " [" + (isNight ? "night" : "day") + "]"
-                            + (forceLoad ? " [chunk locked]" : "")
-            );
+            if (plugin.getConfig().getBoolean("debug", false)) {
+                plugin.getLogger().info(
+                        "[NetherSpawn] " + data.getMobKey()
+                                + " lv" + level
+                                + " -> " + loc.getWorld().getName()
+                                + " x=" + loc.getBlockX()
+                                + " y=" + loc.getBlockY()
+                                + " z=" + loc.getBlockZ()
+                                + " [" + (isNight ? "night" : "day") + "]"
+                                + (forceLoad ? " [chunk locked]" : "")
+                );
+            }
 
         } catch (Exception e) {
             if (forceLoad) chunk.setForceLoaded(false);

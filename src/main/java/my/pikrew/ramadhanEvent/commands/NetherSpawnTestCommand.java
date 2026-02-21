@@ -25,23 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-/**
- * Provides an in-game testing interface for the nether spawn system.
- *
- * The test workflow:
- *  1. All tracked MythicMobs entities are removed from every loaded world.
- *  2. Spawn counters are reset.
- *  3. The spawn rate manager is forced into the requested phase.
- *  4. The nether spawn cycle is triggered n times, each on a separate tick.
- *  5. Spawned mobs have their chunks force-loaded so they survive long enough
- *     for the admin to TP and verify them.
- *  6. A summary with clickable TP coordinates is reported.
- *  7. Phase is restored to the real current phase.
- *
- * Note: test chunks are NOT auto-released after the test ends — the chunks
- * stay loaded until each mob dies or despawns normally, at which point
- * MobDeathListener calls NetherSpawnManager.releaseChunk().
- */
 public class NetherSpawnTestCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> PHASES = Arrays.asList("day", "night");

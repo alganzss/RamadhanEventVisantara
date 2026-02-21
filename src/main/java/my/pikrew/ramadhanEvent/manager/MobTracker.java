@@ -8,28 +8,6 @@ import org.bukkit.entity.Entity;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Live registry of every tracked ghost mob currently present in the world.
- *
- * <p>Entries enter the registry one tick after {@link GhostSpawnManager} or
- * {@link my.pikrew.ramadhanEvent.listener.GhostSpawnListener} confirms a successful
- * spawn, and are removed by {@link my.pikrew.ramadhanEvent.listener.MobDeathListener}
- * on death or despawn. Everything is keyed by entity UUID so stale references
- * cannot silently accumulate between restarts or reloads.</p>
- *
- * <p>{@link #syncFromWorld(Set)} is a reconciliation pass driven by the command
- * handler before it reports live counts. It queries the MythicMobs API directly for
- * all active entities whose internal name matches one of the tracked keys, adds any
- * that are missing from the local registry, and prunes any entries whose entity has
- * since disappeared. This covers mobs that were spawned before the plugin loaded,
- * placed via {@code /mm m spawn}, or whose spawn event was swallowed for any reason.</p>
- *
- * <p>Note on MythicMobs 5.x compatibility: {@code ActiveMob.getEntity()} returns
- * {@code io.lumine.mythic.api.adapters.AbstractEntity}, not {@code org.bukkit.entity.Entity}.
- * Calling {@code getBukkitEntity()} on it returns the underlying Bukkit object. We cast
- * directly rather than going through {@code BukkitAdapter.adapt()} because the adapter
- * method has an incompatible return type in some 5.x builds.</p>
- */
 public class MobTracker {
 
     private final Map<String, Set<UUID>> liveByType  = new ConcurrentHashMap<>();
@@ -48,10 +26,6 @@ public class MobTracker {
         if (bucket != null) bucket.remove(entityId);
     }
 
-    /**
-     * Reconciles the registry against the live MythicMobs world state.
-     * Only considers mobs whose internal name is in {@code trackedKeys}.
-     */
     public void syncFromWorld(Set<String> trackedKeys) {
         Set<UUID> seen = new HashSet<>();
 
@@ -114,11 +88,6 @@ public class MobTracker {
         entityIndex.clear();
     }
 
-    /**
-     * Immutable snapshot of a single live ghost mob entity.
-     * Holds a direct Bukkit entity reference so location reads reflect
-     * wherever the mob has wandered to since it spawned.
-     */
     public static class TrackedMob {
 
         private final String mobKey;
