@@ -119,6 +119,24 @@ ghost-spawn:
     - Pocong
     - Demon
 
+nether-spawn:
+  enabled: true
+  interval-ticks: 400
+  location-attempts: 15
+  force-load-chunks: true
+  worlds: [world_nether]
+  region:
+    min-x: -200
+    max-x: 200
+    min-z: -200
+    max-z: 200
+    min-y: 32
+    max-y: 100
+
+# ============================================================
+# MOB PROFILES
+# ============================================================
+
 mobs:
   Kuntilanak:
     enabled: true
@@ -128,6 +146,8 @@ mobs:
     day-max-level: 3
     night-min-level: 5
     night-max-level: 10
+    nether-day-chance: 0.08
+    nether-night-chance: 0.30
 
   Pocong:
     enabled: true
@@ -137,6 +157,8 @@ mobs:
     day-max-level: 3
     night-min-level: 5
     night-max-level: 10
+    nether-day-chance: 0.06
+    nether-night-chance: 0.25
 
   Demon:
     enabled: true
@@ -146,3 +168,5 @@ mobs:
     day-max-level: 2
     night-min-level: 3
     night-max-level: 7
+    nether-day-chance: 0.12
+    nether-night-chance: 0.35

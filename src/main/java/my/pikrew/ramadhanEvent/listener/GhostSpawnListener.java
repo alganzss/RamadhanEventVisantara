@@ -10,22 +10,16 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
+import java.util.UUID;
+
 /**
- * Passive chance gate for MythicMobs-triggered spawns.
+ * Passive chance gate untuk spawn yang diinisiasi MythicMobs sendiri
+ * (natural spawners, /mm m spawn, skill spawns, dsb.).
  *
- * <p>Intercepts {@link MythicMobSpawnEvent} for mob types tracked in
- * {@link SpawnRateManager}. If the mob fails the configured chance roll
- * the event is cancelled before the entity enters the world. If it passes,
- * registration into {@link my.pikrew.ramadhanEvent.manager.MobTracker} is
- * deferred by one tick to ensure the entity is fully initialised in the world
- * before we store a reference — some MythicMobs builds fire the event before
- * the entity is considered valid by Bukkit.</p>
- *
- * <p>This listener only covers spawns that MythicMobs initiates (natural
- * spawners, {@code /mm m spawn}, skill spawns, etc.). Spawns produced by
- * {@link my.pikrew.ramadhanEvent.manager.GhostSpawnManager} bypass this
- * listener entirely; they record themselves directly after a successful call
- * to the MythicMobs spawn API.</p>
+ * <p>BUG #3 FIX: Spawn yang berasal dari {@link my.pikrew.ramadhanEvent.manager.GhostSpawnManager}
+ * kita sendiri ditandai di {@code managedSpawns} set. Listener ini akan melewati
+ * chance-gate untuk UUID tersebut agar tidak terjadi double-gate yang menyebabkan
+ * mob plugin kita sendiri di-cancel setelah sudah lolos roll pertama.</p>
  */
 public class GhostSpawnListener implements Listener {
 
@@ -40,11 +34,27 @@ public class GhostSpawnListener implements Listener {
         String           mobKey = event.getMobType().getInternalName();
         SpawnRateManager srm    = plugin.getSpawnRateManager();
 
+        // Bukan mob yang kita track — biarkan lewat
         if (!srm.getSpawnDataMap().containsKey(mobKey)) return;
 
+        // BUG #3 FIX: Cek apakah entity ini di-spawn oleh GhostSpawnManager kita.
+        // Jika ya, skip gate — chance sudah dievaluasi di manager, jangan di-cancel.
+        Entity spawned = event.getEntity();
+        if (spawned != null && plugin.getGhostSpawnManager() != null) {
+            UUID id = spawned.getUniqueId();
+            if (plugin.getGhostSpawnManager().getManagedSpawns().contains(id)) {
+                // Spawn dari manager kita — langsung register tanpa chance-roll ulang
+                if (plugin.getConfig().getBoolean("debug", false)) {
+                    plugin.getLogger().info("[Debug] Managed spawn bypass for: " + mobKey + " " + id);
+                }
+                return;
+            }
+        }
+
+        // Spawn dari luar (MythicMobs natural/manual) — lakukan chance-gate normal
         if (plugin.getConfig().getBoolean("debug", false)) {
             plugin.getLogger().info("[Debug] Gate check: '" + mobKey + "' entity="
-                    + (event.getEntity() != null ? event.getEntity().getUniqueId() : "null"));
+                    + (spawned != null ? spawned.getUniqueId() : "null"));
         }
 
         if (!srm.shouldAllowSpawn(mobKey)) {
@@ -52,7 +62,6 @@ public class GhostSpawnListener implements Listener {
             return;
         }
 
-        Entity spawned = event.getEntity();
         if (spawned == null) return;
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {

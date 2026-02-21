@@ -1,28 +1,45 @@
 package my.pikrew.ramadhanEvent.manager;
 
 import io.lumine.mythic.bukkit.MythicBukkit;
+import io.lumine.mythic.core.mobs.ActiveMob;
 import my.pikrew.ramadhanEvent.RamadhanEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GhostSpawnManager {
 
-    private final RamadhanEvent   plugin;
+    private final RamadhanEvent    plugin;
     private final SpawnRateManager spawnRateManager;
     private final Random           rng = new Random();
+
+    /**
+     * BUG #3 FIX: Set UUID entity yang di-spawn oleh manager kita sendiri.
+     * GhostSpawnListener akan skip chance-gate untuk UUID yang ada di sini,
+     * mencegah double-gate yang menyebabkan mob kita sendiri di-cancel.
+     */
+    private final Set<UUID> managedSpawns = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private BukkitTask task;
 
     public GhostSpawnManager(RamadhanEvent plugin, SpawnRateManager spawnRateManager) {
         this.plugin           = plugin;
         this.spawnRateManager = spawnRateManager;
+    }
+
+    public Set<UUID> getManagedSpawns() {
+        return managedSpawns;
     }
 
     public void start() {
@@ -72,7 +89,31 @@ public class GhostSpawnManager {
 
     private void trySpawn(MobSpawnData data, Location loc, int level, boolean isNight) {
         try {
-            MythicBukkit.inst().getMobManager().spawnMob(data.getMobKey(), loc, level);
+            ActiveMob activeMob = MythicBukkit.inst().getMobManager().spawnMob(data.getMobKey(), loc, level);
+
+            if (activeMob == null) {
+                plugin.getLogger().warning("[GhostSpawn] spawnMob returned null for: " + data.getMobKey());
+                return;
+            }
+
+            // BUG #3 FIX: Tandai entity ini sebagai "sudah lolos gate" agar
+            // GhostSpawnListener tidak melakukan chance-roll kedua dan membatalkannya.
+            Entity entity = extractEntity(activeMob);
+            if (entity != null) {
+                UUID id = entity.getUniqueId();
+                managedSpawns.add(id);
+
+                // BUG #2 FIX: Daftarkan ke MobTracker agar live-count akurat.
+                // Delay 1 tick sama seperti GhostSpawnListener untuk memastikan
+                // entity sudah fully initialized di dunia.
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    managedSpawns.remove(id); // bersihkan flag setelah event terlewati
+                    if (entity.isValid() && !entity.isDead()) {
+                        spawnRateManager.getMobTracker().register(data.getMobKey(), entity);
+                    }
+                }, 2L);
+            }
+
             data.recordSpawn(isNight);
 
             if (plugin.getConfig().getBoolean("debug", false)) {
@@ -86,9 +127,17 @@ public class GhostSpawnManager {
         }
     }
 
+    private Entity extractEntity(ActiveMob am) {
+        try {
+            return (Entity) am.getEntity().getBukkitEntity();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private Location findSurface(Location origin) {
-        int radius   = plugin.getConfig().getInt("ghost-spawn.spawn-radius",       32);
-        int attempts = plugin.getConfig().getInt("ghost-spawn.location-attempts",  10);
+        int radius   = plugin.getConfig().getInt("ghost-spawn.spawn-radius",      32);
+        int attempts = plugin.getConfig().getInt("ghost-spawn.location-attempts", 10);
         World world  = origin.getWorld();
 
         for (int i = 0; i < attempts; i++) {

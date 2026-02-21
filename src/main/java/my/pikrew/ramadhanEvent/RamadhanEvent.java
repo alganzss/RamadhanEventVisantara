@@ -28,6 +28,8 @@ public final class RamadhanEvent extends JavaPlugin {
         displayManager   = new DisplayManager(this, messageUtil, timeManager);
         crateManager     = new CrateManager(this);
 
+        // BUG #1 FIX: start() harus dipanggil agar spawnDataMap terisi
+        // sebelum GhostSpawnManager dan GhostSpawnListener mulai bekerja.
         spawnRateManager.start();
 
         regionWandListener = new RegionWandListener(this);
@@ -37,6 +39,9 @@ public final class RamadhanEvent extends JavaPlugin {
         getServer().getPluginManager().registerEvents(regionWandListener, this);
 
         if (getServer().getPluginManager().getPlugin("MythicMobs") != null) {
+            // BUG #3 FIX: GhostSpawnListener sekarang mengetahui spawn mana
+            // yang berasal dari GhostSpawnManager (via flag) agar tidak
+            // double-gate spawn yang sudah lolos dari manager kita sendiri.
             getServer().getPluginManager().registerEvents(new GhostSpawnListener(this), this);
             getServer().getPluginManager().registerEvents(new MobDeathListener(this), this);
 

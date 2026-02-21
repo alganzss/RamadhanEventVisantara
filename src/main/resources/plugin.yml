@@ -2,6 +2,7 @@ name: RamadhanEvent
 version: '1.0-SNAPSHOT'
 main: my.pikrew.ramadhanEvent.RamadhanEvent
 api-version: '1.21'
+author: 'Pikrew, Bintanq'
 
 commands:
   ramadhan:
@@ -11,12 +12,16 @@ commands:
 
   ramadhanintegrationmobs:
     description: Ramadhan Integration Mobs command
-    usage: /ramadhanintegrationmobs [status|refresh]
+    usage: /ramadhanintegrationmobs [status|refresh|mobs|scan|test]
+    permission: ramadhanevent.admin
+
+  netherspawntest:
+    description: Test the nether spawn system — clears mobs, forces a phase, runs cycles, reports locations.
+    usage: /netherspawntest <day|night> <cycles>
     permission: ramadhanevent.admin
 
 permissions:
 
-  # --- Ramadhan time ---
   ramadhan.reload:
     description: Reload the RamadhanEvent configuration.
     default: op
@@ -24,12 +29,10 @@ permissions:
     description: View debug information.
     default: op
 
-  # --- Crate admin ---
   ramadhan.crate.admin:
     description: Full access to /ramadhan box.
     default: op
 
-  # --- Wand ---
   ramadhan.wand.use:
     description: Use the region wand to select positions.
     default: op
@@ -43,7 +46,6 @@ permissions:
     description: Reset wand position selections.
     default: op
 
-  # --- Mobs integration ---
   ramadhanevent.admin:
-    description: Access to /ramadhanintegrationmobs.
+    description: Access to /ramadhanintegrationmobs and /netherspawntest.
     default: op

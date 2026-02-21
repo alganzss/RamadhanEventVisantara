@@ -7,13 +7,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.util.UUID;
+
 /**
  * Removes ghost mobs from {@link my.pikrew.ramadhanEvent.manager.MobTracker}
  * when they die or despawn, keeping the live count accurate.
  *
- * <p>Both events are handled here because MythicMobs fires {@link MythicMobDespawnEvent}
- * when a mob unloads without dying (chunk unload, cleanup commands, etc.), which would
- * otherwise leave a stale entry in the tracker indefinitely.</p>
+ * Also notifies {@link my.pikrew.ramadhanEvent.manager.NetherSpawnManager} to
+ * release the force-loaded chunk that was locked when the mob spawned. Without
+ * this, chunks accumulate as permanently force-loaded until server restart.
  */
 public class MobDeathListener implements Listener {
 
@@ -25,7 +27,13 @@ public class MobDeathListener implements Listener {
 
     @EventHandler
     public void onMythicMobDeath(MythicMobDeathEvent event) {
-        plugin.getSpawnRateManager().getMobTracker().unregister(event.getEntity().getUniqueId());
+        UUID id = event.getEntity().getUniqueId();
+
+        plugin.getSpawnRateManager().getMobTracker().unregister(id);
+
+        if (plugin.getNetherSpawnManager() != null) {
+            plugin.getNetherSpawnManager().releaseChunk(id);
+        }
 
         if (plugin.getConfig().getBoolean("debug", false)) {
             String key = event.getMobType().getInternalName();
@@ -38,6 +46,12 @@ public class MobDeathListener implements Listener {
 
     @EventHandler
     public void onMythicMobDespawn(MythicMobDespawnEvent event) {
-        plugin.getSpawnRateManager().getMobTracker().unregister(event.getEntity().getUniqueId());
+        UUID id = event.getEntity().getUniqueId();
+
+        plugin.getSpawnRateManager().getMobTracker().unregister(id);
+
+        if (plugin.getNetherSpawnManager() != null) {
+            plugin.getNetherSpawnManager().releaseChunk(id);
+        }
     }
 }
