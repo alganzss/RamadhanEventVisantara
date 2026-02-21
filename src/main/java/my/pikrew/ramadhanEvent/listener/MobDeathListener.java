@@ -1,31 +1,43 @@
 package my.pikrew.ramadhanEvent.listener;
 
 import io.lumine.mythic.bukkit.events.MythicMobDeathEvent;
+import io.lumine.mythic.bukkit.events.MythicMobDespawnEvent;
 import my.pikrew.ramadhanEvent.RamadhanEvent;
-import my.pikrew.ramadhanEvent.manager.SpawnRateManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+/**
+ * Removes ghost mobs from {@link my.pikrew.ramadhanEvent.manager.MobTracker}
+ * when they die or despawn, keeping the live count accurate.
+ *
+ * <p>Both events are handled here because MythicMobs fires {@link MythicMobDespawnEvent}
+ * when a mob unloads without dying (chunk unload, cleanup commands, etc.), which would
+ * otherwise leave a stale entry in the tracker indefinitely.</p>
+ */
 public class MobDeathListener implements Listener {
 
     private final RamadhanEvent plugin;
-    private final SpawnRateManager SpawnRateManager;
 
     public MobDeathListener(RamadhanEvent plugin) {
         this.plugin = plugin;
-        this.SpawnRateManager = plugin.getSpawnRateManager();
     }
 
     @EventHandler
     public void onMythicMobDeath(MythicMobDeathEvent event) {
-        String internalName = event.getMobType().getInternalName();
-        if (!SpawnRateManager.getSpawnDataMap().containsKey(internalName)) return;
-        if (!(event.getKiller() instanceof Player player)) return;
+        plugin.getSpawnRateManager().getMobTracker().unregister(event.getEntity().getUniqueId());
 
         if (plugin.getConfig().getBoolean("debug", false)) {
-            plugin.getLogger().info("[Debug] " + player.getName() + " killed " + internalName
-                    + " | Night Surge: " + SpawnRateManager.isNightSurgeActive());
+            String key = event.getMobType().getInternalName();
+            if (!plugin.getSpawnRateManager().getSpawnDataMap().containsKey(key)) return;
+            if (!(event.getKiller() instanceof Player player)) return;
+            plugin.getLogger().info("[Debug] " + player.getName() + " killed " + key
+                    + " phase=" + (plugin.getSpawnRateManager().isNightSurgeActive() ? "night" : "day"));
         }
+    }
+
+    @EventHandler
+    public void onMythicMobDespawn(MythicMobDespawnEvent event) {
+        plugin.getSpawnRateManager().getMobTracker().unregister(event.getEntity().getUniqueId());
     }
 }

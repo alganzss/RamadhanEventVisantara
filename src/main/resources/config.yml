@@ -1,60 +1,49 @@
 # RamadhanEvent Configuration
-# Simulates Ramadhan fasting with realistic hunger mechanics + event crates.
 
 # ============================================================
 # GENERAL
 # ============================================================
 
-# Enable verbose debug logging.
 debug: false
+
+prefix: "&6[RamadhanEvent] &r"
 
 # ============================================================
 # TIME & TIMEZONE
 # ============================================================
 
-# Timezone used to determine real-world day/night periods.
-# Format: GMT+HH:MM  (e.g. GMT+07:00, GMT-05:00)
 timezone: "GMT+07:00"
 
-# 24-hour clock times for each period boundary.
 times:
-  # When Ramadhan mechanics (hunger multiplier) activate.
   day: "8:00"
-  # When vanilla mechanics resume (iftar / breaking fast).
   night: "18:00"
 
 # ============================================================
-# RAMADHAN HUNGER MECHANICS  (active during DAY period only)
+# RAMADHAN HUNGER MECHANICS
 # ============================================================
-ramadhan-time:
-  # How much faster exhaustion drains the food bar.
-  # 2.0 = twice as fast, 1.5 = 50% faster.
-  hunger-loss-multiplier: 2.0
 
-  # Fraction of food gain kept when eating during fasting.
-  # 0.5 = only half the hunger is restored.
+ramadhan-time:
+  hunger-loss-multiplier: 2.0
   food-consumption-multiplier: 0.5
 
 # ============================================================
 # DISPLAY
 # ============================================================
+
 displays:
   action-bar:
     enabled: true
-    # Update frequency in ticks (20 = 1 second).
     update-interval: 20
-
   boss-bar:
     enabled: true
     update-interval: 20
-    # BLUE | GREEN | PINK | PURPLE | RED | WHITE | YELLOW
     color: "YELLOW"
-    # SOLID | SEGMENTED_6 | SEGMENTED_10 | SEGMENTED_12 | SEGMENTED_20
     style: "SOLID"
 
 # ============================================================
 # TRANSITION ANNOUNCEMENTS
 # ============================================================
+
 messages:
   announcements:
     day:
@@ -75,23 +64,14 @@ messages:
 # ============================================================
 # EVENT CRATES
 # ============================================================
+
 crate:
-  # Seconds before an unclaimed crate disappears.
   lifetime-seconds: 120
-
-  # Base64 player-head texture for the crate block.
-  # Find textures at: https://minecraft-heads.com/
   texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2U4YmEyOGU5Zjk5OTM3NGMzNWQ1ZmRhY2YyY2E3YTlhMzU3NWIxMTcyMGI5YmQ0OTFlNWVlMWM1ZDllYTllZiJ9fX0="
-
-  # 24-hour times at which crates auto-spawn.
   spawn-times:
     - "20:00"
     - "23:15"
-
-  # Number of crates spawned per auto-spawn trigger.
   amount: 3
-
-  # ---- Spawn Region ----
   region:
     world:
       - world
@@ -101,11 +81,6 @@ crate:
     max-z: 500
     min-y: 60
     max-y: 256
-
-  # ---- Rewards ----
-  # Format: CHANCE%|TYPE:DATA
-  #   command:  console command (%player% = claimer's name)
-  #   item:     MATERIAL:AMOUNT
   rewards:
     - "100%|item:BREAD:3"
     - "50%|item:DIAMOND:1"
@@ -113,9 +88,9 @@ crate:
     - "5%|command:give %player% netherite_ingot 1"
 
 # ============================================================
-# REGION WAND  (/ramadhan wand)
-# Sets the bounding box for random crate spawning.
+# REGION WAND
 # ============================================================
+
 wand-item:
   material: GOLDEN_AXE
   name: "&b&lRamadhan Region Wand"
@@ -125,36 +100,48 @@ wand-item:
     - ""
     - "&eRun &b/ramadhan wand save &eto save the region."
 
+# ============================================================
+# GHOST SPAWN INTEGRATION
+#
+# mob-keys must match the InternalName in your MythicMobs YAML.
+# Each key also needs a matching entry under `mobs:` below.
+#
+# Chances are expressed as decimals: 0.15 = 15% per spawn attempt.
+# ============================================================
+
 ghost-spawn:
-  check-interval-ticks: 1200
+  plugin-spawner: true
+  interval-ticks: 200
+  spawn-radius: 32
+  location-attempts: 10
   mob-keys:
-    Ghost_Pocong
-    Ghost_Kuntilanak
-    Ghost_Setan
+    - Kuntilanak
+    - Pocong
+    - Demon
 
 mobs:
-  Ghost_Pocong:
+  Kuntilanak:
     enabled: true
     day-chance: 0.05
-    night-chance: 0.15
+    night-chance: 0.20
     day-min-level: 1
     day-max-level: 3
     night-min-level: 5
     night-max-level: 10
 
-  Ghost_Kuntilanak:
+  Pocong:
     enabled: true
-    day-chance: 0.03
-    night-chance: 0.12
+    day-chance: 0.04
+    night-chance: 0.18
     day-min-level: 1
     day-max-level: 3
     night-min-level: 5
     night-max-level: 10
 
-  Ghost_Setan:
+  Demon:
     enabled: true
-    day-chance: 0.01
-    night-chance: 0.05
+    day-chance: 0.02
+    night-chance: 0.10
     day-min-level: 1
     day-max-level: 2
     night-min-level: 3
